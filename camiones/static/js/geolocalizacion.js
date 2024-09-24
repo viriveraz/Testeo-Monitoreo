@@ -9,13 +9,18 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Marcador para la ubicación actual del usuario
 var userMarker = L.marker([-33.4489, -70.6693]).addTo(map).bindPopup("Ubicación actual");
 
+// Diccionario de destinos con sus coordenadas
+var destinos = {
+    "Plaza de Armas": [-33.4372, -70.6506],
+    "Estación Central": [-33.4513, -70.6803]
+};
+
 // Función para obtener la ubicación del usuario y actualizar el marcador
 function obtenerUbicacion() {
     if (navigator.geolocation) {
-        // Pedir permisos de ubicación con alta precisión
-        navigator.geolocation.watchPosition(actualizarUbicacion, mostrarError, {
+        navigator.geolocation.getCurrentPosition(actualizarUbicacion, mostrarError, {
             enableHighAccuracy: true,
-            timeout: 10000,  // Aumentar tiempo de espera para asegurarse de que iOS responda
+            timeout: 5000,
             maximumAge: 0
         });
     } else {
@@ -33,67 +38,77 @@ function actualizarUbicacion(position) {
     map.setView([lat, lon], 13);
 
     userMarker.bindPopup("Tu ubicación: " + lat + ", " + lon).openPopup();
+}
 
-    // Enviar la ubicación al servidor si es necesario
-    enviarUbicacionAlServidor(lat, lon);
+// Función para generar la ruta utilizando OSRM
+function generarRuta(latOrigen, lonOrigen, latDestino, lonDestino) {
+    var osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lonOrigen},${latOrigen};${lonDestino},${latDestino}?geometries=geojson&overview=full`;
+
+    fetch(osrmUrl)
+    .then(response => response.json())
+    .then(data => {
+        if (data.routes && data.routes.length > 0) {
+            var route = data.routes[0].geometry;
+
+            // Dibujar la ruta en el mapa
+            L.geoJSON(route, {
+                style: {
+                    color: 'blue',
+                    weight: 5
+                }
+            }).addTo(map);
+            console.log("Ruta generada correctamente");
+        } else {
+            alert("No se pudo encontrar una ruta.");
+        }
+    })
+    .catch(error => console.error('Error al obtener la ruta:', error));
 }
 
 // Manejo de errores
 function mostrarError(error) {
-    switch (error.code) {
+    switch(error.code) {
         case error.PERMISSION_DENIED:
-            alert("Permiso de ubicación denegado. Por favor, habilita la ubicación en la configuración del navegador.");
+            alert("Permiso denegado.");
             break;
         case error.POSITION_UNAVAILABLE:
-            alert("Ubicación no disponible. Inténtalo nuevamente en una zona con mejor señal.");
+            alert("Ubicación no disponible.");
             break;
         case error.TIMEOUT:
-            alert("Tiempo de espera agotado para obtener la ubicación.");
+            alert("Tiempo de espera agotado.");
             break;
         case error.UNKNOWN_ERROR:
-            alert("Error desconocido al intentar obtener la ubicación.");
+            alert("Error desconocido.");
             break;
     }
 }
 
-// Función para enviar la ubicación al servidor
-function enviarUbicacionAlServidor(lat, lon) {
-    fetch('/api/actualizar_ubicacion/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken') // Incluir token CSRF para seguridad en Django
-        },
-        body: JSON.stringify({
-            latitud: lat,
-            longitud: lon
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log("Ubicación enviada al servidor.");
-        } else {
-            console.error("Error al enviar la ubicación: " + response.statusText);
-        }
-    })
-    .catch(error => console.error('Error al enviar la ubicación:', error));
-}
+// Añadir el evento al botón para generar la ruta
+document.addEventListener("DOMContentLoaded", function() {
+    var generarRutaBtn = document.getElementById("generarRutaBtn");
+    var destinoSelect = document.getElementById("destinoSelect");
 
-// Obtener el token CSRF en Django
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        let cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            let cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    if (generarRutaBtn && destinoSelect) {
+        generarRutaBtn.addEventListener("click", function() {
+            var destinoSeleccionado = destinoSelect.value;
+            var destinoCoords = destinos[destinoSeleccionado];
+
+            if (destinoCoords) {
+                // Obtener la ubicación actual del usuario
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var latActual = position.coords.latitude;
+                    var lonActual = position.coords.longitude;
+
+                    console.log("Ubicación actual: " + latActual + ", " + lonActual);
+                    console.log("Destino seleccionado: " + destinoCoords[0] + ", " + destinoCoords[1]);
+
+                    // Generar la ruta desde la ubicación actual hasta el destino seleccionado
+                    generarRuta(latActual, lonActual, destinoCoords[0], destinoCoords[1]);
+                }, mostrarError);
             }
-        }
+        });
     }
-    return cookieValue;
-}
+});
 
 // Iniciar el monitoreo de geolocalización
 obtenerUbicacion();
