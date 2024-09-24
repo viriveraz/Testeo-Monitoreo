@@ -38,14 +38,15 @@ def mostrar_mapa(request):
 @csrf_exempt
 def actualizar_ubicacion(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        latitud = data.get('latitud')
-        longitud = data.get('longitud')
-
-        camion = Camion.objects.first()  # Obtener un camión específico
-        camion.latitud = latitud
-        camion.longitud = longitud
-        camion.save()
-
-        return JsonResponse({'status': 'Ubicación actualizada'})
+        try:
+            data = json.loads(request.body)
+            latitud = data.get('latitud')
+            longitud = data.get('longitud')
+            
+            # Procesar la ubicación (aquí podrías guardarla en la base de datos si es necesario)
+            print(f'Nueva ubicación recibida: {latitud}, {longitud}')
+            
+            return JsonResponse({'status': 'Ubicación actualizada'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Método no permitido'}, status=405)

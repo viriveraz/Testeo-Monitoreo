@@ -3,64 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Camiones</title>
+    <title>Monitoreo en Tiempo Real</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         #map {
             height: 600px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>Mapa de Camiones en Tiempo Real - Región de Santiago</h1>
+    <h1>Mapa de Monitoreo en Tiempo Real - Región de Santiago</h1>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([-33.4489, -70.6693], 13); // Santiago de Chile
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
-
-        var camionMarker = L.marker([-33.4489, -70.6693]).addTo(map);  // Inicialmente coloca el marcador
-
-        // Función para obtener la ubicación del camión en tiempo real
-        function actualizarUbicacionCamion() {
-            fetch('http://127.0.0.1:8000/api/ubicacion/1/')  // Ajusta el ID del camión si es necesario
-                .then(response => response.json())
-                .then(data => {
-                    // Actualiza la posición del camión
-                    var nuevaLatLng = new L.LatLng(data.latitud, data.longitud);
-                    camionMarker.setLatLng(nuevaLatLng);
-                })
-                .catch(error => console.log('Error al obtener la ubicación:', error));
-        }
-
-        // Actualiza la ubicación cada 5 segundos
-        setInterval(actualizarUbicacionCamion, 5000);
-
-        // Obtener y mostrar la ruta desde OSRM
-        fetch('/api/ruta/')
-            .then(response => response.json())
-            .then(data => {
-                var geojson = data.routes[0].geometry;
-                var route = L.geoJSON(geojson).addTo(map);
-            })
-            .catch(error => console.error('Error al obtener la ruta:', error));
-
-        // Marcador del camión
-        var marker = L.marker([-33.4489, -70.6693]).addTo(map);
-
-        // Actualizar ubicación del camión cada 5 segundos
-        setInterval(function () {
-            fetch('http://127.0.0.1:8000/api/ubicacion/1/')
-                .then(response => response.json())
-                .then(data => {
-                    marker.setLatLng([data.latitud, data.longitud]);
-                })
-                .catch(error => console.error('Error al obtener la ubicación:', error));
-        }, 5000);
-    </script>
+    <script src="/static/js/geolocalizacion.js"></script>  <!-- Link al archivo de JS para geolocalización -->
 </body>
 </html>
