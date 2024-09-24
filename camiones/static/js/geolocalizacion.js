@@ -12,9 +12,10 @@ var userMarker = L.marker([-33.4489, -70.6693]).addTo(map).bindPopup("Ubicación
 // Función para obtener la ubicación del usuario y actualizar el marcador
 function obtenerUbicacion() {
     if (navigator.geolocation) {
+        // Pedir permisos de ubicación con alta precisión
         navigator.geolocation.watchPosition(actualizarUbicacion, mostrarError, {
             enableHighAccuracy: true,
-            timeout: 5000,
+            timeout: 10000,  // Aumentar tiempo de espera para asegurarse de que iOS responda
             maximumAge: 0
         });
     } else {
@@ -39,18 +40,18 @@ function actualizarUbicacion(position) {
 
 // Manejo de errores
 function mostrarError(error) {
-    switch(error.code) {
+    switch (error.code) {
         case error.PERMISSION_DENIED:
-            alert("Permiso denegado.");
+            alert("Permiso de ubicación denegado. Por favor, habilita la ubicación en la configuración del navegador.");
             break;
         case error.POSITION_UNAVAILABLE:
-            alert("Ubicación no disponible.");
+            alert("Ubicación no disponible. Inténtalo nuevamente en una zona con mejor señal.");
             break;
         case error.TIMEOUT:
-            alert("Tiempo de espera agotado.");
+            alert("Tiempo de espera agotado para obtener la ubicación.");
             break;
         case error.UNKNOWN_ERROR:
-            alert("Error desconocido.");
+            alert("Error desconocido al intentar obtener la ubicación.");
             break;
     }
 }
@@ -72,10 +73,10 @@ function enviarUbicacionAlServidor(lat, lon) {
         if (response.ok) {
             console.log("Ubicación enviada al servidor.");
         } else {
-            console.error("Error al enviar la ubicación.");
+            console.error("Error al enviar la ubicación: " + response.statusText);
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => console.error('Error al enviar la ubicación:', error));
 }
 
 // Obtener el token CSRF en Django
