@@ -1,6 +1,6 @@
 from .import views
 from django.urls import path
-from .views import mostrar_mapa, obtener_ubicacion, obtener_ruta,actualizar_ubicacion
+from .views import mostrar_mapa, obtener_ubicacion, obtener_ruta,actualizar_ubicacion, dispositivos_view
 
 urlpatterns = [
     path('api/ubicacion/', actualizar_ubicacion, name='actualizar_ubicacion'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/ruta/', obtener_ruta, name='obtener_ruta'),
     path('', mostrar_mapa, name='mostrar_mapa'),
     path('api/actualizar_ubicacion/', actualizar_ubicacion, name='actualizar_ubicacion'),  # Recibe actualizaciones de ubicación
+    path('dispositivos/', dispositivos_view, name='dispositivos'),
 ]

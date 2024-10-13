@@ -1,5 +1,12 @@
 from pathlib import Path
 
+LOGIN_REDIRECT_URL = '/home/'
+LOGOUT_REDIRECT_URL = '/autenticacion/login/'
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://ac68-2800-150-125-30e-14b2-13b0-2261-9019.ngrok-free.app',  # Reemplaza con tu dominio ngrok
+]
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,7 +20,7 @@ SECRET_KEY = 'django-insecure-v3wsypt=g$+e$u0k)(!0=-024%pvsp^8ov*jec2v-$zz!fx#d-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.14', 'localhost', '127.0.0.1','9d53-2800-150-125-30e-60e8-d076-8e94-44ee.ngrok-free.app']
+ALLOWED_HOSTS = ['192.168.0.14', 'localhost', '127.0.0.1','ac68-2800-150-125-30e-14b2-13b0-2261-9019.ngrok-free.app']
 
 
 # Application definition
@@ -26,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'camiones',
+    'autenticacion',
 ]
 
 MIDDLEWARE = [

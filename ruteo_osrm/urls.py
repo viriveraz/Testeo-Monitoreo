@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('camiones.urls')),  # Incluir las rutas de la app 'camiones'
-    path('', lambda request: redirect('mapa/')),  # Redirigir la raíz a /mapa/
+    path('camiones/', include('camiones.urls')),
+    path('autenticacion/', include('autenticacion.urls')),  # Incluyendo la app de autenticación
+    path('', lambda request: redirect('autenticacion/login/')),  # Redirigir la raíz a la página de inicio de sesión
 ]

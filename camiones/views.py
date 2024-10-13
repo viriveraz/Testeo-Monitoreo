@@ -50,3 +50,10 @@ def actualizar_ubicacion(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+def dispositivos_view(request):
+    # Filtramos los camiones que tienen coordenadas asignadas
+    camiones = Camion.objects.exclude(latitud=None).exclude(longitud=None)
+    context = {'camiones': camiones}
+    return render(request, 'dispositivos.html', context)
+
