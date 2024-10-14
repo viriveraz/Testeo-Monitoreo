@@ -3,120 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo en Tiempo Real</title>
+    <title>Monitoreo de Ubicación en Tiempo Real</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        /* Estilos generales */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            background-color: #f0f0f0;
-        }
-
-        /* Estilos para el contenedor del menú */
-        .menu-lateral {
-            width: 250px;
-            background-color: #333;
-            color: white;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-            position: fixed;
-        }
-
-        /* Estilos para los elementos del menú */
-        .menu-lateral h2 {
-            color: #fff;
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-
-        .menu-lateral ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .menu-lateral ul li {
-            margin-bottom: 15px;
-        }
-
-        .menu-lateral ul li a {
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
-            display: block;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #444;
-            transition: background-color 0.3s;
-        }
-
-        .menu-lateral ul li a:hover {
-            background-color: #555;
-        }
-
-        /* Estilos para el contenido principal */
-        .contenido {
-            margin-left: 270px;
-            padding: 20px;
-            width: 100%;
-        }
-
-        /* Estilos para el mapa */
         #map {
             height: 600px;
             width: 100%;
         }
-
-        /* Estilos para el selector y botón */
-        #destinoSelect, #generarRutaBtn {
-            margin-top: 20px;
-            padding: 10px;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-
-        #generarRutaBtn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        #generarRutaBtn:hover {
-            background-color: #218838;
-        }
     </style>
 </head>
 <body>
-
-    <!-- Menú lateral -->
-    <div class="menu-lateral">
-        <h2>Módulos</h2>
-        <ul>
-            <li><a href="#">Monitoreo de Camiones</a></li>
-            <li><a href="#">Reporte de Viajes</a></li>
-            <li><a href="#">Gestión de Conductores</a></li>
-            <li><a href="#">Configuración</a></li>
-        </ul>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="contenido">
-        <h1>Mapa de Monitoreo en Tiempo Real - Región de Santiago</h1>
-        <div id="map"></div>
-
-        <select id="destinoSelect">
-            <option value="Plaza de Armas">Plaza de Armas</option>
-            <option value="Estación Central">Estación Central</option>
-        </select>
-        <button id="generarRutaBtn">Generar Ruta</button>
-    </div>
+    <h1>Monitoreo de Ubicación en Tiempo Real</h1>
+    <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="/static/js/geolocalizacion.js"></script> <!-- Link al archivo de JS para geolocalización -->
+    <script src="/static/js/geolocalizacion.js"></script> <!-- Aquí tu archivo JS personalizado -->
 </body>
 </html>

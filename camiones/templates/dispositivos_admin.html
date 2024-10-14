@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitoreo Admin</title>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+<body>
+    <h1>Monitoreo de Choferes en Tiempo Real</h1>
+    <div id="map" style="height: 600px;"></div>
+
+    <script>
+        var map = L.map('map').setView([-33.4489, -70.6693], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = {};
+
+        function actualizarUbicaciones() {
+            fetch('/camiones/obtener_ubicaciones/')
+                .then(response => response.json())
+                .then(data => {
+                    data.dispositivos.forEach(function(dispositivo) {
+                        var lat = dispositivo.latitud;
+                        var lon = dispositivo.longitud;
+
+                        if (markers[dispositivo.nombre]) {
+                            markers[dispositivo.nombre].setLatLng([lat, lon]).update();
+                        } else {
+                            markers[dispositivo.nombre] = L.marker([lat, lon]).addTo(map)
+                                .bindPopup(dispositivo.nombre);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        setInterval(actualizarUbicaciones, 5000);  // Actualiza las ubicaciones cada 5 segundos
+    </script>
+</body>
+</html>

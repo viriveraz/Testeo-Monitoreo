@@ -1,4 +1,23 @@
-// Inicializar el mapa centrado en Santiago
+// Función para obtener el token CSRF desde las cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Verifica si esta cookie empieza con el nombre dado
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Inicializar el mapa centrado en una posición inicial (Santiago)
 var map = L.map('map').setView([-33.4489, -70.6693], 13);
 
 // Cargar los tiles de OpenStreetMap
@@ -6,70 +25,68 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Marcador para la ubicación actual del usuario
+// Crear un marcador para el dispositivo
 var userMarker = L.marker([-33.4489, -70.6693]).addTo(map).bindPopup("Ubicación actual");
 
-// Diccionario de destinos con sus coordenadas
-var destinos = {
-    "Plaza de Armas": [-33.4372, -70.6506],
-    "Estación Central": [-33.4513, -70.6803]
-};
-
-// Función para obtener la ubicación del usuario y actualizar el marcador
 function obtenerUbicacion() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(actualizarUbicacion, mostrarError, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-        });
+        navigator.geolocation.getCurrentPosition(function (position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+
+            // Imprimir las coordenadas actuales en la consola
+            console.log("Ubicación actual: Latitud = " + lat + ", Longitud = " + lon);
+
+            // Actualizar la posición del marcador
+            userMarker.setLatLng([lat, lon]).update();
+
+            // Cambiar la vista del mapa a la nueva posición
+            map.setView([lat, lon], 13);
+
+            // Actualizar el popup con la nueva ubicación
+            userMarker.bindPopup("Tu ubicación actual: " + lat.toFixed(6) + ", " + lon.toFixed(6)).openPopup();
+
+            // Enviar la ubicación al servidor
+            enviarUbicacionAlServidor(lat, lon);
+
+        }, mostrarError);
     } else {
-        alert("La geolocalización no está disponible en este navegador.");
+        alert("Geolocalización no disponible en tu navegador.");
     }
 }
 
-// Función para actualizar la ubicación
-function actualizarUbicacion(position) {
-    var lat = position.coords.latitude;
-    var lon = position.coords.longitude;
 
-    // Actualizar el marcador en el mapa
-    userMarker.setLatLng([lat, lon]).update();
-    map.setView([lat, lon], 13);
-
-    userMarker.bindPopup("Tu ubicación: " + lat + ", " + lon).openPopup();
-}
-
-// Función para generar la ruta utilizando OSRM
-function generarRuta(latOrigen, lonOrigen, latDestino, lonDestino) {
-    var osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lonOrigen},${latOrigen};${lonDestino},${latDestino}?geometries=geojson&overview=full`;
-
-    fetch(osrmUrl)
-    .then(response => response.json())
-    .then(data => {
-        if (data.routes && data.routes.length > 0) {
-            var route = data.routes[0].geometry;
-
-            // Dibujar la ruta en el mapa
-            L.geoJSON(route, {
-                style: {
-                    color: 'blue',
-                    weight: 5
-                }
-            }).addTo(map);
-            console.log("Ruta generada correctamente");
-        } else {
-            alert("No se pudo encontrar una ruta.");
-        }
+// Función para enviar la ubicación al servidor
+function enviarUbicacionAlServidor(lat, lon) {
+    fetch('/camiones/actualizar-ubicacion/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken // Asegúrate de incluir el token CSRF si es necesario
+        },
+        body: JSON.stringify({
+            latitud: lat,
+            longitud: lon,
+            nombre: "Nombre del dispositivo" // Puedes reemplazar esto con un valor dinámico si es necesario
+        })
     })
-    .catch(error => console.error('Error al obtener la ruta:', error));
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al enviar la ubicación al servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Ubicación enviada correctamente al servidor.");
+    })
+    .catch(error => console.error("Error al enviar la ubicación:", error));
 }
 
-// Manejo de errores
+// Manejo de errores en geolocalización
 function mostrarError(error) {
-    switch(error.code) {
+    switch (error.code) {
         case error.PERMISSION_DENIED:
-            alert("Permiso denegado.");
+            alert("Permiso de geolocalización denegado.");
             break;
         case error.POSITION_UNAVAILABLE:
             alert("Ubicación no disponible.");
@@ -83,32 +100,8 @@ function mostrarError(error) {
     }
 }
 
-// Añadir el evento al botón para generar la ruta
-document.addEventListener("DOMContentLoaded", function() {
-    var generarRutaBtn = document.getElementById("generarRutaBtn");
-    var destinoSelect = document.getElementById("destinoSelect");
+// Llamar a la función obtenerUbicacion cada 5 segundos para actualizar la ubicación
+setInterval(obtenerUbicacion, 5000);
 
-    if (generarRutaBtn && destinoSelect) {
-        generarRutaBtn.addEventListener("click", function() {
-            var destinoSeleccionado = destinoSelect.value;
-            var destinoCoords = destinos[destinoSeleccionado];
-
-            if (destinoCoords) {
-                // Obtener la ubicación actual del usuario
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var latActual = position.coords.latitude;
-                    var lonActual = position.coords.longitude;
-
-                    console.log("Ubicación actual: " + latActual + ", " + lonActual);
-                    console.log("Destino seleccionado: " + destinoCoords[0] + ", " + destinoCoords[1]);
-
-                    // Generar la ruta desde la ubicación actual hasta el destino seleccionado
-                    generarRuta(latActual, lonActual, destinoCoords[0], destinoCoords[1]);
-                }, mostrarError);
-            }
-        });
-    }
-});
-
-// Iniciar el monitoreo de geolocalización
+// Llamar a la función obtenerUbicacion cuando se cargue la página
 obtenerUbicacion();
