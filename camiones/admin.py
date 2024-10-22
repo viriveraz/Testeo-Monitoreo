@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Camion, AsignacionChofer
 
-# Register your models here.
+admin.site.register(Camion)
+admin.site.register(AsignacionChofer)

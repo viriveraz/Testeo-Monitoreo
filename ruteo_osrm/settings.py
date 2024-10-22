@@ -1,6 +1,6 @@
 from pathlib import Path
 
-LOGIN_REDIRECT_URL = '/home/'
+LOGIN_REDIRECT_URL = 'redirigir_seleccion_camion'
 LOGOUT_REDIRECT_URL = '/autenticacion/login/'
 
 CSRF_TRUSTED_ORIGINS = [

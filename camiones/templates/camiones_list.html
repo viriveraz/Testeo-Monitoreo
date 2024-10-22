@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Camiones</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Camiones</h1>
+        <div class="card-container">
+            {% for camion in camiones %}
+            <div class="card">
+                <h2>{{ camion.nombre }}</h2>
+                <p><strong>Patente:</strong> {{ camion.patente }}</p>
+                <p><strong>Marca:</strong> {{ camion.marca }}</p>
+                <p><strong>Modelo:</strong> {{ camion.modelo }}</p>
+                <div class="card-actions">
+                    <a href="{% url 'camion_update' camion.id %}" class="btn btn-edit">Editar</a>
+                    <form action="{% url 'camion_delete' camion.id %}" method="POST" class="form-delete">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-delete">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'camion_create' %}" class="btn btn-add">Añadir Nuevo Camión</a>
+    </div>
+</body>
+</html>

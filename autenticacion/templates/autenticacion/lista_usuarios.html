@@ -1,0 +1,6 @@
+<h1>Lista de Usuarios</h1>
+<ul>
+    {% for usuario in usuarios %}
+    <li>{{ usuario.username }} - {{ usuario.is_staff|yesno:"Admin,Chofer" }}</li>
+    {% endfor %}
+</ul>

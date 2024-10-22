@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Eliminación</title>
+    <!-- Enlace al CSS específico del módulo de usuarios -->
+    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin-top: 100px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #dc3545;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+        }
+        .btn-group .btn {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>¿Estás seguro?</h1>
+        <p>¿Seguro que deseas eliminar este usuario? <br> Esta acción no se puede deshacer.</p>
+        <div class="btn-group">
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+            </form>
+            <a href="{% url 'usuarios_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </div>
+</body>
+</html>
