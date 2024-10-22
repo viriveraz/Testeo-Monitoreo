@@ -1,6 +1,48 @@
-<h1>Formulario de Camión</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Camión</title>
+    <link rel="stylesheet" href="{% static 'css/camiones.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center">Formulario de Camión</h1>
+        <form method="POST" class="form-camion">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="patente">Patente:</label>
+                <input type="text" id="patente" name="patente" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="marca">Marca:</label>
+                <input type="text" id="marca" name="marca" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="modelo">Modelo:</label>
+                <input type="text" id="modelo" name="modelo" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="año">Año:</label>
+                <input type="number" id="año" name="año" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="color">Color:</label>
+                <input type="text" id="color" name="color" class="form-control">
+            </div>
+            
+            <!-- Botones para Guardar y Cancelar -->
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn-submit">Guardar</button>
+                <a href="{% url 'camiones_list' %}" class="btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
