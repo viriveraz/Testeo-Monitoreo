@@ -37,8 +37,10 @@ def actualizar_ubicacion(request):
             if not nombre or latitud is None or longitud is None:
                 return JsonResponse({'error': 'Faltan datos en la solicitud'}, status=400)
 
-            # Buscar si el dispositivo con ese nombre ya existe, o crearlo si no existe
-            dispositivo, creado = Camion.objects.get_or_create(nombre=nombre)
+            # Obtener el primer camión con el nombre dado o crear uno si no existe
+            dispositivo = Camion.objects.filter(nombre=nombre).first()
+            if dispositivo is None:
+                dispositivo = Camion.objects.create(nombre=nombre)
 
             # Asignar los valores de latitud y longitud
             dispositivo.latitud = latitud
@@ -52,6 +54,7 @@ def actualizar_ubicacion(request):
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 
 @login_required
 def dispositivos_admin_view(request):

@@ -4,7 +4,7 @@ LOGIN_REDIRECT_URL = 'redirigir_seleccion_camion'
 LOGOUT_REDIRECT_URL = '/autenticacion/login/'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://eaa7-2800-150-125-30e-4542-f409-33bd-d363.ngrok-free.app',  # Reemplaza con tu dominio ngrok
+    'https://f7d3-2800-150-125-30e-2970-24db-41ba-304d.ngrok-free.app',  # Reemplaza con tu dominio ngrok
 ]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +20,7 @@ SECRET_KEY = 'django-insecure-v3wsypt=g$+e$u0k)(!0=-024%pvsp^8ov*jec2v-$zz!fx#d-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.14', 'localhost', '127.0.0.1','eaa7-2800-150-125-30e-4542-f409-33bd-d363.ngrok-free.app']
+ALLOWED_HOSTS = ['192.168.0.14', 'localhost', '127.0.0.1','f7d3-2800-150-125-30e-2970-24db-41ba-304d.ngrok-free.app']
 
 
 # Application definition

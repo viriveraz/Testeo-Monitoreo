@@ -67,7 +67,7 @@ function enviarUbicacionAlServidor(lat, lon) {
         body: JSON.stringify({
             latitud: lat,
             longitud: lon,
-            nombre: "Nombre del dispositivo" // Puedes reemplazar esto con un valor dinámico si es necesario
+            nombre: dispositivoNombre // Nombre del dispositivo dinámico desde el usuario autenticado
         })
     })
     .then(response => {
@@ -81,6 +81,7 @@ function enviarUbicacionAlServidor(lat, lon) {
     })
     .catch(error => console.error("Error al enviar la ubicación:", error));
 }
+
 
 // Manejo de errores en geolocalización
 function mostrarError(error) {
