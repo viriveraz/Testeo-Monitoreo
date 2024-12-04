@@ -7,9 +7,34 @@
     <title>Lista de Usuarios</title>
     <!-- Cargar el archivo CSS específico para usuarios -->
     <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'css/monitoreo.css' %}"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
+    <!-- Menú lateral -->
+    <div class="menu-lateral closed" id="menu-lateral">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
+            <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
+            <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
+            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
+            <li><a href="{% url 'historial_viajes' %}">Historial de Viajes</a></li>
+        </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.username }}</strong>
+        </div>
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
+    </div>
+    <button id="menu-toggle">☰</button>
+
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="my-4">Lista de Usuarios</h1>
@@ -41,5 +66,17 @@
             {% endfor %}
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menu-lateral');
+            const menuToggle = document.getElementById('menu-toggle');
+            menuToggle.addEventListener('click', function () {
+                menu.classList.toggle('closed');
+                menu.classList.toggle('open');
+            });
+        });
+    </script>
+
 </body>
 </html>

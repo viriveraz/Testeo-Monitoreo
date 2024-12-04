@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Camión</title>
+    <link rel="stylesheet" href="{% static 'css/formCrear.css' %}">
+    <style>
+        /* Estilo para los botones */
+        .btn-submit, .btn-cancel {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .btn-submit {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+            border: none;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+        .btn-cancel {
+            background-color: #f44336; /* Rojo */
+            color: white;
+            text-decoration: none;
+        }
+        .btn-cancel:hover {
+            background-color: #d32f2f;
+        }
+        /* Centrar los botones */
+        .d-flex {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center">Editar Camión</h1>
+        <form method="POST" class="form-camion">
+            {% csrf_token %}
+            
+            <!-- Campo: Nombre -->
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" class="form-control" value="{{ form.nombre.value|default:'' }}">
+            </div>
+            
+            <!-- Campo: Patente -->
+            <div class="form-group">
+                <label for="patente">Patente:</label>
+                <input type="text" id="patente" name="patente" class="form-control" value="{{ form.patente.value|default:'' }}">
+            </div>
+            
+            <!-- Campo: Marca -->
+            <div class="form-group">
+                <label for="marca">Marca:</label>
+                <input type="text" id="marca" name="marca" class="form-control" value="{{ form.marca.value|default:'' }}">
+            </div>
+            
+            <!-- Campo: Modelo -->
+            <div class="form-group">
+                <label for="modelo">Modelo:</label>
+                <input type="text" id="modelo" name="modelo" class="form-control" value="{{ form.modelo.value|default:'' }}">
+            </div>
+            
+            <!-- Campo: Año -->
+            <div class="form-group">
+                <label for="año">Año:</label>
+                <input type="number" id="año" name="año" class="form-control" value="{{ form.año.value|default:'' }}">
+            </div>
+            
+            <!-- Campo: Color -->
+            <div class="form-group">
+                <label for="color">Color:</label>
+                <input type="text" id="color" name="color" class="form-control" value="{{ form.color.value|default:'' }}">
+            </div>
+            
+            <!-- Botones para Guardar y Cancelar -->
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn-submit">Guardar cambios</button>
+                <a href="{% url 'camiones_list' %}" class="btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

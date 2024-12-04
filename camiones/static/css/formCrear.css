@@ -1,0 +1,140 @@
+body {
+    background-color: #f4f6f9;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.form-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+}
+h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+.btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    width: 48%;
+}
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.text-danger {
+    color: red;
+    font-size: 12px;
+    margin-top: -10px;
+}
+/* Botones */
+.button-group {
+    display: flex;
+    justify-content: space-between; /* Espaciado uniforme */
+    gap: 10px; /* Espaciado entre botones */
+}
+
+.btn {
+    flex: 1; /* Ocupa el mismo espacio */
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none; /* Para eliminar el subrayado en el enlace */
+    cursor: pointer;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Opcional: Uniformidad visual */
+.button-group a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo del Modal */
+.modal {
+    display: none; /* Ocultar el modal por defecto */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}

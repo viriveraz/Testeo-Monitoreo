@@ -6,156 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoreo de Ubicación en Tiempo Real</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        /* Estilos generales */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f4;
-        }
-
-        #map {
-            height: calc(80vh - 80px);
-            width: calc(100% - 290px);
-            transition: width 0.3s;
-            border-radius: 10px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-            margin: 20px;
-            margin-left: 290px;
-        }
-
-        .menu-inferior {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 60px;
-            background-color: #4CAF50;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            color: white;
-            box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .menu-inferior div {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .menu-inferior div img {
-            width: 24px;
-            height: 24px;
-        }
-
-        .menu-inferior div span {
-            font-size: 14px;
-        }
-
-        #btn-centrar {
-            position: fixed;
-            bottom: 80px;
-            right: 30px;
-            background-color: white;
-            border: none;
-            border-radius: 50%;
-            padding: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.3s ease-in-out;
-        }
-
-        #btn-centrar img {
-            width: 26px;
-            height: 26px;
-        }
-
-        #btn-centrar:hover {
-            transform: scale(1.1);
-            background-color: #eaeaea;
-        }
-
-        .menu-lateral {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
-            background-color: #333;
-            color: white;
-            padding: 60px 20px 20px 20px;
-            box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: transform 0.3s;
-        }
-
-        .menu-lateral h2 {
-            color: #fff;
-            margin: 0;
-            padding-bottom: 20px;
-        }
-
-        .menu-lateral ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .menu-lateral ul li {
-            margin: 15px 0;
-        }
-
-        .menu-lateral ul li a {
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
-        }
-
-        #menu-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px;
-            cursor: pointer;
-            z-index: 1100;
-            border-radius: 5px;
-        }
-
-        #menu-toggle:hover {
-            background-color: #45a049;
-        }
-
-        .menu-lateral.closed {
-            transform: translateX(-100%);
-        }
-
-        @media (max-width: 768px) {
-            #map {
-                height: calc(100vh - 80px);
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/monitoreo2.css' %}">
 </head>
 <body>
 
-    <div class="menu-lateral open" id="menu-lateral">
+    <!-- Cambiar la clase inicial a 'menu-lateral closed' -->
+    <div class="menu-lateral closed" id="menu-lateral">
         <h2>Menú</h2>
         <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
             <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
             <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
             <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
+            <li><a href="{% url 'historial_viajes' %}">Historial De Viajes</a></li>
+            <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
         </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.username }}</strong> <!-- Django context variable -->
+        </div>  
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>      
     </div>
-
-    <button id="menu-toggle">☰</button>
-
     <div id="map"></div>
 
     <button id="btn-centrar">
@@ -165,38 +42,108 @@
     <div class="menu-inferior">
         <div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Geolocalización">
-            <span>Geolocalizacion</span>
-        </div>
-        <div>
-            <img src="{% static 'img/image.png' %}" alt="QR">
-            <span>QR</span>
+            <span>Geolocalización</span>
         </div>
     </div>
 
-    <!-- Agregar el nombre del dispositivo dinámicamente en una variable JavaScript -->
-    <script>
-        const dispositivoNombre = "{{ request.user.username }}"; // Nombre del usuario autenticado
-    </script>
-
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="{% static 'js/geolocalizacion.js' %}"></script> <!-- Aquí tu archivo JS personalizado -->
+    <script src="{% static 'js/geolocalizacion.js' %}"></script>
 
     <script>
-        document.getElementById('menu-toggle').addEventListener('click', function() {
-            const menu = document.getElementById('menu-lateral');
+        document.addEventListener('DOMContentLoaded', function () {
+        const menu = document.getElementById('menu-lateral');
+        const menuToggle = document.getElementById('menu-toggle');
+        const modal = document.getElementById('modal-mensaje');
+        const modalTexto = document.getElementById('modal-texto');
+        const closeModalButton = document.getElementById('cerrar-modal');
+        const iniciarViajeBtn = document.getElementById('iniciar-viaje-btn');
+        const finalizarForm = document.querySelector('form[action="{% url "finalizar_viaje" %}"]');
+
+        // Toggle para el menú lateral
+        menuToggle.addEventListener('click', function () {
             menu.classList.toggle('closed');
+            menu.classList.toggle('open');
         });
 
-        document.getElementById('btn-centrar').addEventListener('click', function() {
+        // Centrar el mapa en la ubicación actual
+        document.getElementById('btn-centrar').addEventListener('click', function () {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var lat = position.coords.latitude;
-                    var lon = position.coords.longitude;
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
                     map.setView([lat, lon], 13);
                 });
             }
         });
-    </script>
 
+        // Cerrar el modal
+        closeModalButton.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+
+        // Manejo del botón "Iniciar Viaje"
+        iniciarViajeBtn.addEventListener('click', function () {
+            fetch("{% url 'iniciar_viaje' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalTexto.textContent = data.error; // Mostrar error en el modal
+                        modalTexto.className = 'error';
+                    } else {
+                        modalTexto.textContent = data.status; // Mostrar éxito en el modal
+                        modalTexto.className = 'success';
+                    }
+                    modal.style.display = 'flex'; // Mostrar modal
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalTexto.textContent = 'Ocurrió un error inesperado al iniciar el viaje.';
+                    modalTexto.className = 'error';
+                    modal.style.display = 'flex';
+                });
+        });
+
+        // Finalizar viaje con manejo de mensajes
+        finalizarForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Evitar el envío por defecto
+
+            fetch("{% url 'finalizar_viaje' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalTexto.textContent = data.error; // Mensaje de error
+                        modalTexto.className = 'error';
+                    } else {
+                        modalTexto.textContent = data.status; // Mensaje de éxito
+                        modalTexto.className = 'success';
+                    }
+                    modal.style.display = 'flex'; // Mostrar modal
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalTexto.textContent = 'Ocurrió un error inesperado. Intente nuevamente.';
+                    modalTexto.className = 'error';
+                    modal.style.display = 'flex'; // Mostrar modal
+                });
+        });
+
+        // Solo mostrar el modal si tiene contenido relevante
+        if (modalTexto.textContent.trim() === "") {
+            modal.style.display = 'none';
+        }
+    });
+
+    </script>
 </body>
 </html>

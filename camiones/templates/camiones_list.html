@@ -1,33 +1,182 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/messages.css' %}">
+    <link rel="stylesheet" href="{% static 'css/monitoreo.css' %}"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Camiones</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        /* Contenedor principal */
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        /* Tarjetas */
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            flex: 1 1 calc(33.333% - 20px); /* Tres columnas por fila */
+            min-width: 300px;
+        }
+
+        /* Títulos */
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        /* Texto dentro de tarjetas */
+        .card-text {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* Botones */
+        .card-actions {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-outline-primary {
+            color: #007bff;
+            border: 1px solid #007bff;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .btn-outline-danger {
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        /* Botón Añadir Nuevo */
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-add i {
+            margin-right: 8px; /* Espaciado entre el ícono y el texto */
+        }
+
+        .btn-add:hover {
+            background-color: #218838;
+            color: #fff;
+        }
+        .d-flex {
+            display: flex;
+            justify-content: space-between; /* Espacia el título y el botón */
+            align-items: center; /* Alinea verticalmente los elementos */
+        }
+        
+        
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Lista de Camiones</h1>
-        <div class="card-container">
-            {% for camion in camiones %}
-            <div class="card">
-                <h2>{{ camion.nombre }}</h2>
-                <p><strong>Patente:</strong> {{ camion.patente }}</p>
-                <p><strong>Marca:</strong> {{ camion.marca }}</p>
-                <p><strong>Modelo:</strong> {{ camion.modelo }}</p>
-                <div class="card-actions">
-                    <a href="{% url 'camion_update' camion.id %}" class="btn btn-edit">Editar</a>
-                    <form action="{% url 'camion_delete' camion.id %}" method="POST" class="form-delete">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-delete">Eliminar</button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
+    <!-- Menú lateral -->
+    <div class="menu-lateral closed" id="menu-lateral">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
+            <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
+            <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
+            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
+            <li><a href="{% url 'historial_viajes' %}">Historial de Viajes</a></li>
+        </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.username }}</strong>
         </div>
-        <a href="{% url 'camion_create' %}" class="btn btn-add">Añadir Nuevo Camión</a>
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
     </div>
+    <button id="menu-toggle">☰</button>
+
+    <div class="container">
+    <!-- Botón "Añadir Nuevo Camión" -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="my-4">Lista de Camiones</h1>
+        <a href="{% url 'camion_create' %}" class="btn btn-add">
+            <i class="fas fa-truck"></i> Añadir Nuevo Camión
+        </a>
+    </div>  
+
+    <!-- Tarjetas de camiones -->
+    <div class="card-container">
+        {% for camion in camiones %}
+        <div class="card">
+            <h2 class="card-title">{{ camion.nombre }}</h2>
+            <p class="card-text"><strong>Patente:</strong> {{ camion.patente }}</p>
+            <p class="card-text"><strong>Marca:</strong> {{ camion.marca }}</p>
+            <p class="card-text"><strong>Modelo:</strong> {{ camion.modelo }}</p>
+            <div class="card-actions">
+                <a href="{% url 'camion_update' camion.id %}" class="btn btn-outline-primary">Editar</a>
+                <form action="{% url 'camion_delete' camion.id %}" method="POST" class="form-delete">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menu-lateral');
+            const menuToggle = document.getElementById('menu-toggle');
+            menuToggle.addEventListener('click', function () {
+                menu.classList.toggle('closed');
+                menu.classList.toggle('open');
+            });
+        });
+    </script>
 </body>
 </html>

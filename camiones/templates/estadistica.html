@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="{% static 'css/styles3.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Camiones</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+</head>
+<body>
+    <div>
+        <button><a href="{% url 'mostrar_mapa' %}">Volver</a></button>
+        <div class="card-container">
+            <div class="card">
+                <h3>Viajes Totales {{ viajes_totales }}</h3>
+            </div>
+            <div class="card">
+                <h3>Viajes en curso {{ viajes_en_curso }}</h3>
+            </div>
+            <div class="card">
+                <h3>Viajes Completados {{ viajes_completados }}</h3>
+            </div>
+            <div class="card">
+                <h3>Conductores En Línea {{ choferes_online }}</h3>
+                
+            </div>
+        </div>
+        
+    </div>
+    <div class="barras">
+        <div>
+            {{ graph_html|safe }}
+        </div>
+        <div class="mapa">
+            {{ map_html|safe }}
+        </div>
+        
+    </div>
+    
+    
+</body>
+</html>

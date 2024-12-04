@@ -1,17 +1,50 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Monitoreo Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 </head>
 <body>
-    <h1>Monitoreo de Choferes en Tiempo Real</h1>
-    <div id="map" style="height: 600px;"></div>
+    <!-- Menú lateral -->
+    <div class="menu-lateral closed" id="menu-lateral">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
+            <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
+            <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
+            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
+            <li><a href="{% url 'historial_viajes' %}">Historial de Viajes</a></li>
+        </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.username }}</strong>
+        </div>
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
+    </div>
+    <div class="header">
+        <button id="menu-toggle">☰</button>
+        <h1 class="titulo-modulo">Monitoreo de Ubicaciónes en Tiempo Real</h1>
+    </div>    
+
+    <!-- Mapa -->
+    <div id="map"></div>
 
     <script>
-        var map = L.map('map').setView([-33.4489, -70.6693], 13);
+        var map = L.map('map', {
+            center: [-33.4489, -70.6693],
+            zoom: 13,
+            zoomControl: false // Añadimos los controles de zoom
+        });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -38,7 +71,20 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        setInterval(actualizarUbicaciones, 5000);  // Actualiza las ubicaciones cada 5 segundos
+        setInterval(actualizarUbicaciones, 5000); // Actualiza las ubicaciones cada 5 segundos
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menu-lateral');
+            const menuToggle = document.getElementById('menu-toggle');
+
+            menuToggle.addEventListener('click', function () {
+                menu.classList.toggle('closed');
+                menu.classList.toggle('open');
+                setTimeout(() => {
+                    map.invalidateSize(); // Asegura que el mapa se renderice bien al abrir/cerrar el menú
+                }, 300);
+            });
+        });
     </script>
 </body>
 </html>

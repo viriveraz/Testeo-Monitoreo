@@ -4,12 +4,48 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Camión</title>
-    <link rel="stylesheet" href="{% static 'css/camiones.css' %}">
+    <title>Crear Camión</title>
+    <link rel="stylesheet" href="{% static 'css/formCrear.css' %}">
+    <style>
+        /* Estilo para los botones */
+        .btn-submit, .btn-cancel {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .btn-submit {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+            border: none;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+        .btn-cancel {
+            background-color: #f44336; /* Rojo */
+            color: white;
+            text-decoration: none;
+        }
+        .btn-cancel:hover {
+            background-color: #d32f2f;
+        }
+        /* Centrar los botones */
+        .d-flex {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="my-4 text-center">Formulario de Camión</h1>
+        <h1 class="my-4 text-center">Crear Camión</h1>
         <form method="POST" class="form-camion">
             {% csrf_token %}
             <div class="form-group">
@@ -38,8 +74,8 @@
             </div>
             
             <!-- Botones para Guardar y Cancelar -->
-            <div class="d-flex justify-content-center">
-                <button type="submit" class="btn-submit">Guardar</button>
+            <div class="d-flex">
+                <button type="submit" class="btn-submit">Crear Camión</button>
                 <a href="{% url 'camiones_list' %}" class="btn-cancel">Cancelar</a>
             </div>
         </form>

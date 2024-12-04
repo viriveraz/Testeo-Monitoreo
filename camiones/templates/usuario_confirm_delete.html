@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmar Eliminación</title>
-    <!-- Enlace al CSS específico del módulo de usuarios -->
+    <!-- CSS Base -->
     <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
     <style>
         body {
@@ -58,6 +58,39 @@
         .btn-secondary:hover {
             background-color: #5a6268;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal .btn-modal {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .modal .btn-modal:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -65,12 +98,66 @@
         <h1>¿Estás seguro?</h1>
         <p>¿Seguro que deseas eliminar este usuario? <br> Esta acción no se puede deshacer.</p>
         <div class="btn-group">
-            <form method="POST">
+            <form id="form-eliminar-usuario" method="POST" action="{% url 'usuario_delete' usuario.id %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Eliminar</button>
             </form>
             <a href="{% url 'usuarios_list' %}" class="btn btn-secondary">Cancelar</a>
         </div>
     </div>
+
+    <!-- Modal de Confirmación -->
+    <div id="modal-confirmacion" class="modal">
+        <div class="modal-content">
+            <h2>¡Usuario Eliminado!</h2>
+            <p>El usuario ha sido eliminado exitosamente.</p>
+            <button id="cerrar-modal" class="btn-modal">Aceptar</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const formEliminarUsuario = document.getElementById('form-eliminar-usuario');
+            const modalConfirmacion = document.getElementById('modal-confirmacion');
+            const cerrarModalBtn = document.getElementById('cerrar-modal');
+
+            formEliminarUsuario.addEventListener('submit', function (event) {
+                event.preventDefault(); // Detener el envío estándar del formulario
+
+                const url = formEliminarUsuario.action;
+                const formData = new FormData(formEliminarUsuario);
+
+                // Realizar la solicitud AJAX
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' // Indicar que es una solicitud AJAX
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); // Procesar la respuesta como JSON
+                    } else {
+                        throw new Error('Error al eliminar el usuario');
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Mostrar el modal de confirmación
+                        modalConfirmacion.style.display = 'flex';
+
+                        // Redirigir al cerrar el modal
+                        cerrarModalBtn.addEventListener('click', function () {
+                            window.location.href = "{% url 'usuarios_list' %}";
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

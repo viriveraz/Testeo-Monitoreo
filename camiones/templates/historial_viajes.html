@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/historial_menu.css' %}">
+    <link rel="stylesheet" href="{% static 'css/historial.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Viajes</title>
+</head>
+<body>
+
+    <button><a href="{% url 'mostrar_mapa' %}">Volver</a></button>
+    <div class="container">
+        <h2>Historial de Viajes</h2>
+
+        <!-- Formulario de filtrado -->
+        <form method="GET" action="">
+            <label for="fecha_inicio">Desde:</label>
+            <input type="date" name="fecha_inicio" id="fecha_inicio">
+        
+            <label for="fecha_fin">Hasta:</label>
+            <input type="date" name="fecha_fin" id="fecha_fin">
+        
+            <label for="camion_id">Camión:</label>
+            <select name="camion_id" id="camion_id">
+                <option value="">Todos</option>
+                {% for camion in camiones %}
+                <option value="{{ camion.id }}">{{ camion.nombre }}</option>
+                {% endfor %}
+            </select>
+        
+            <button type="submit">Filtrar</button>
+        </form>
+
+        <!-- Tabla de historial de viajes -->
+        {% if historial %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Camión</th>
+                    <th>Conductor</th>
+                    <th>Fecha de Inicio</th>
+                    <th>Fecha de Fin</th>
+                    <th>Estado</th>
+                    <th>Eliminar Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for viaje in historial %}
+                <tr>
+                    <td>{{ viaje.camion.nombre }}</td>
+                    <td>{{ viaje.chofer.username }}</td>
+                    <td>{{ viaje.fecha_inicio }}</td>
+                    <td>{{ viaje.fecha_fin|default:"En curso" }}</td>
+                    <td>
+                        {% if viaje.estado == "Finalizado" %}
+                        <span class="estado-finalizado">Finalizado</span>
+                        {% else %}
+                        <span class="estado-en-curso">En curso</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="{% url 'eliminar_viaje' viaje.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-danger">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </form>
+                    </td>                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="exportar-container">
+            <a href="{% url 'exportar_historial' %}" class="btn-exportar-excel">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </a>
+        </div>
+
+        <!-- Paginación -->
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; Primera</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+            {% endif %}
+        
+            <span class="current">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+            {% endif %}
+        </div>
+        
+        {% else %}
+        <p class="no-results">No se encontraron viajes para los filtros seleccionados.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menu-lateral');
+            const menuToggle = document.getElementById('menu-toggle');
+            menuToggle.addEventListener('click', function () {
+                menu.classList.toggle('closed');
+                menu.classList.toggle('open');
+            });
+        });
+    </script>
+    
+</body>
+</html>

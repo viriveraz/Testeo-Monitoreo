@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Usuario</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+    <link rel="stylesheet" href="{% static 'css/formCrear.css' %}">
+    <link rel="stylesheet" href="{% static 'css/monitoreo.css' %}">
+</head>
+<body>
+    <!-- Menú lateral -->
+    <div class="menu-lateral closed" id="menu-lateral">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
+            <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
+            <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
+            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
+            <li><a href="{% url 'historial_viajes' %}">Historial De Viajes</a></li>
+        </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.username }}</strong>
+        </div>
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <button id="menu-toggle">☰</button>
+
+    <!-- Formulario de creación de usuario -->
+    <div class="form-container">
+        <h1>Crear Usuario</h1>
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="{% url 'usuario_create' %}" id="form-crear-usuario">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de usuario</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">Nombre</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger">{{ form.first_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Apellido</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="text-danger">{{ form.last_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-success">Crear usuario</button>
+                        <a href="{% url 'usuarios_list' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de mensajes -->
+    <div id="modal-mensaje" class="modal" style="display: none;">
+        <div class="modal-contenido">
+            <p id="modal-texto"></p>
+            <button id="cerrar-modal" class="btn-modal">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menu-lateral');
+            const menuToggle = document.getElementById('menu-toggle');
+            const modal = document.getElementById('modal-mensaje');
+            const modalTexto = document.getElementById('modal-texto');
+            const closeModalButton = document.getElementById('cerrar-modal');
+            const formCrearUsuario = document.getElementById('form-crear-usuario');
+
+            // Toggle del menú lateral
+            menuToggle.addEventListener('click', function () {
+                menu.classList.toggle('closed');
+                menu.classList.toggle('open');
+            });
+
+            // Manejo del formulario de creación de usuario
+            formCrearUsuario.addEventListener('submit', function (e) {
+                e.preventDefault(); // Evita el envío por defecto
+
+                const formData = new FormData(formCrearUsuario);
+
+                fetch(formCrearUsuario.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Indica que es una solicitud AJAX
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            modalTexto.textContent = 'Errores de validación: ' + JSON.stringify(err.errors);
+                            modalTexto.className = 'error';
+                            modal.style.display = 'flex'; // Mostrar modal con errores
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        modalTexto.textContent = '¡Usuario creado con éxito!';
+                        modalTexto.className = 'success';
+                        modal.style.display = 'flex'; // Mostrar modal de éxito
+
+                        // Agregar redirección al cerrar el modal
+                        closeModalButton.addEventListener('click', function () {
+                            window.location.href = "{% url 'usuarios_list' %}"; // Redirigir a la lista de usuarios
+                        });
+                    } else {
+                        modalTexto.textContent = 'Errores: ' + JSON.stringify(data.errors);
+                        modalTexto.className = 'error';
+                        modal.style.display = 'flex'; // Mostrar modal con errores
+                    }
+                })
+                .catch(error => {
+                    modalTexto.textContent = 'Error inesperado. Intenta nuevamente.';
+                    modalTexto.className = 'error';
+                    modal.style.display = 'flex';
+                    console.error('Error:', error);
+                });
+            });
+
+            // Cerrar el modal (para otros casos)
+            closeModalButton.addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+        });
+
+    </script>
+</body>
+</html>

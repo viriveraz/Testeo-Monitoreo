@@ -17,8 +17,12 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-// Inicializar el mapa centrado en una posición inicial (Santiago)
-var map = L.map('map').setView([-33.4489, -70.6693], 13);
+// Inicializar el mapa centrado en una posición inicial (Santiago) y sin botones de zoom
+var map = L.map('map', {
+    center: [-33.4489, -70.6693],
+    zoom: 13,
+    zoomControl: false // Elimina los controles de zoom
+});
 
 // Cargar los tiles de OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -67,7 +71,6 @@ function enviarUbicacionAlServidor(lat, lon) {
         body: JSON.stringify({
             latitud: lat,
             longitud: lon,
-            nombre: dispositivoNombre // Nombre del dispositivo dinámico desde el usuario autenticado
         })
     })
     .then(response => {

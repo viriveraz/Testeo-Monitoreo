@@ -17,7 +17,7 @@ body {
 }
 
 h1 {
-    text-align: center;
+    text-align: left; /* Cambiado a alineación a la izquierda */
     color: #333;
     font-size: 2rem;
     margin-bottom: 20px;
@@ -80,19 +80,23 @@ h1 {
     cursor: pointer;
 }
 
-.btn-add {
-    display: block;
-    margin: 20px auto;
-    background-color: #28a745;
-    padding: 12px 30px;
-    border-radius: 8px;
-    text-align: center;
-}
-
 .btn-add:hover, .btn-edit:hover, .btn-delete:hover {
     opacity: 0.9;
 }
 
+/* Estilo para el contenedor del título y el botón */
+.d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+/* Ajuste del formulario de eliminación */
 .form-delete {
     display: inline-block;
 }

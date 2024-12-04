@@ -1,6 +1,6 @@
 from .import views
 from django.urls import path
-from .views import mostrar_mapa, obtener_ubicacion,actualizar_ubicacion,dispositivos_admin_view, dispositivos_chofer_view
+from .views import mostrar_mapa, obtener_ubicacion,actualizar_ubicacion,dispositivos_admin_view, dispositivos_chofer_view,finalizar_viaje
 
 urlpatterns = [
     path('api/ubicacion/', actualizar_ubicacion, name='actualizar_ubicacion'),
@@ -21,9 +21,19 @@ urlpatterns = [
     path('camiones/nuevo/', views.camion_create, name='camion_create'),
     path('camiones/<int:id>/editar/', views.camion_update, name='camion_update'),
     path('camiones/<int:id>/eliminar/', views.camion_delete, name='camion_delete'),
+    path('camiones/actualizar-ubicacion/', views.actualizar_ubicacion, name='actualizar_ubicacion'),
 
-    path('asignar-conductor/', views.asignar_conductor, name='asignar_conductor'),
+    path('iniciar_viaje/', views.iniciar_viaje, name='iniciar_viaje'),
+    path('finalizar-viaje/', views.finalizar_viaje, name='finalizar_viaje'),
 
-    path('seleccionar_camion/', views.seleccionar_camion, name='seleccionar_camion'),
-    path('redirigir-seleccion-camion/', views.redirigir_seleccion_camion, name='redirigir_seleccion_camion'),
+    path('historial-viajes/', views.historial_viajes, name='historial_viajes'),
+    path('historial-viajes-chofer/', views.historial_viajes_chofer, name='historial_viajes_chofer'),
+    path('historial/eliminar/<int:viaje_id>/', views.eliminar_viaje, name='eliminar_viaje'),
+    path('exportar-historial/', views.exportar_historial_excel, name='exportar_historial'),
+
+
+    path('estadistica/', views.estadistica, name='estadistica'),
+
+
+
 ]

@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo de Ubicación en Tiempo Real</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'css/monitoreo.css' %}">
+</head>
+<body>
+
+
+    <div id="map"></div>
+
+    <button id="btn-centrar">
+        <img src="https://cdn-icons-png.flaticon.com/512/447/447031.png" alt="Centrar ubicación">
+    </button>
+
+    <div class="menu-inferior">
+        <div>
+            <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Geolocalización">
+            <span>Geolocalización</span>
+        </div>
+        <div>
+            <button id="iniciar-viaje-btn">Iniciar Viaje</button>
+        </div>
+        <div>
+            <button id=""><a href="{% url 'historial_viajes_chofer' %}">Historial</a></button>
+        </div>
+        <div>
+            <form method="POST" action="{% url 'finalizar_viaje' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Finalizar Viaje</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="{% static 'js/geolocalizacion.js' %}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const menu = document.getElementById('menu-lateral');
+        const menuToggle = document.getElementById('menu-toggle');
+        const modal = document.getElementById('modal-mensaje');
+        const modalTexto = document.getElementById('modal-texto');
+        const closeModalButton = document.getElementById('cerrar-modal');
+        const iniciarViajeBtn = document.getElementById('iniciar-viaje-btn');
+        const finalizarForm = document.querySelector('form[action="{% url "finalizar_viaje" %}"]');
+
+        // Toggle para el menú lateral
+        menuToggle.addEventListener('click', function () {
+            menu.classList.toggle('closed');
+            menu.classList.toggle('open');
+        });
+
+        // Centrar el mapa en la ubicación actual
+        document.getElementById('btn-centrar').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    map.setView([lat, lon], 13);
+                });
+            }
+        });
+
+        // Cerrar el modal
+        closeModalButton.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+
+        // Manejo del botón "Iniciar Viaje"
+        iniciarViajeBtn.addEventListener('click', function () {
+            fetch("{% url 'iniciar_viaje' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalTexto.textContent = data.error; // Mostrar error en el modal
+                        modalTexto.className = 'error';
+                    } else {
+                        modalTexto.textContent = data.status; // Mostrar éxito en el modal
+                        modalTexto.className = 'success';
+                    }
+                    modal.style.display = 'flex'; // Mostrar modal
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalTexto.textContent = 'Ocurrió un error inesperado al iniciar el viaje.';
+                    modalTexto.className = 'error';
+                    modal.style.display = 'flex';
+                });
+        });
+
+        // Finalizar viaje con manejo de mensajes
+        finalizarForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Evitar el envío por defecto
+
+            fetch("{% url 'finalizar_viaje' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalTexto.textContent = data.error; // Mensaje de error
+                        modalTexto.className = 'error';
+                    } else {
+                        modalTexto.textContent = data.status; // Mensaje de éxito
+                        modalTexto.className = 'success';
+                    }
+                    modal.style.display = 'flex'; // Mostrar modal
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalTexto.textContent = 'Ocurrió un error inesperado. Intente nuevamente.';
+                    modalTexto.className = 'error';
+                    modal.style.display = 'flex'; // Mostrar modal
+                });
+        });
+
+        // Solo mostrar el modal si tiene contenido relevante
+        if (modalTexto.textContent.trim() === "") {
+            modal.style.display = 'none';
+        }
+    });
+
+    </script>
+</body>
+</html>
