@@ -45,9 +45,11 @@ class HistorialViaje(models.Model):
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField(null=True, blank=True)
     ruta = models.TextField(null=True, blank=True)  # JSON con la ruta del viaje
-    estado = models.CharField(max_length=50, default="En curso")  # "En curso", "Finalizado", etc.
-    latitud_final = models.FloatField(null=True, blank=True)  # Coordenada final de latitud
-    longitud_final = models.FloatField(null=True, blank=True)  # Coordenada final de longitud
+    estado = models.CharField(max_length=50, default="En curso")
+    latitud_inicial = models.FloatField(null=True, blank=True) 
+    longitud_inicial = models.FloatField(null=True, blank=True) 
+    latitud_final = models.FloatField(null=True, blank=True)  
+    longitud_final = models.FloatField(null=True, blank=True) 
 
     def clean(self):
         if self.fecha_fin and self.fecha_fin < self.fecha_inicio:

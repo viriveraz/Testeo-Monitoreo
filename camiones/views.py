@@ -232,6 +232,14 @@ def iniciar_viaje(request):
             estado="En curso"
         )
         
+        if historial:
+            historial.fecha_fin = timezone.now()
+            # Aquí se actualizan las coordenadas finales
+            historial.latitud_inicial = asignacion.camion.latitud
+            historial.longitud_inicial = asignacion.camion.longitud
+            historial.save()
+
+        
         # Actualizar la asignación para indicar que el viaje está activo
         asignacion.en_viaje = True
         asignacion.save()
