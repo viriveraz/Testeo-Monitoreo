@@ -228,26 +228,17 @@ def iniciar_viaje(request):
         historial = HistorialViaje.objects.create(
             camion=asignacion.camion,
             chofer=request.user,
-            fecha_inicio=timezone.now(),
+            fecha_inicio=now(),
             estado="En curso"
         )
-        
-        if historial:
-            historial.fecha_fin = timezone.now()
-            # Aquí se actualizan las coordenadas finales
-            historial.latitud_inicial = asignacion.camion.latitud
-            historial.longitud_inicial = asignacion.camion.longitud
-            historial.save()
 
-        
-        # Actualizar la asignación para indicar que el viaje está activo
+        # Actualizar asignación
         asignacion.en_viaje = True
         asignacion.save()
 
         return JsonResponse({'status': 'Viaje iniciado', 'fecha_inicio': historial.fecha_inicio})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-
 
 @login_required
 def finalizar_viaje(request):
@@ -269,22 +260,17 @@ def finalizar_viaje(request):
         ).order_by('-fecha_inicio').first()
 
         if historial:
-            historial.fecha_fin = timezone.now()
+            historial.fecha_fin = now()
             historial.estado = "Finalizado"
-            # Aquí se actualizan las coordenadas finales
-            historial.latitud_final = asignacion.camion.latitud
-            historial.longitud_final = asignacion.camion.longitud
+            historial.duracion_total = historial.fecha_fin - historial.fecha_inicio
             historial.save()
 
         # Liberar el camión
         asignacion.en_viaje = False
-        asignacion.fecha_fin = timezone.now()
+        asignacion.fecha_fin = now()
         asignacion.save()
 
-        asignacion.camion.choferes_asignados.remove(request.user)
-        asignacion.camion.save()
-
-        return JsonResponse({'status': 'Viaje finalizado', 'fecha_fin': historial.fecha_fin})
+        return JsonResponse({'status': 'Viaje finalizado', 'duracion_total': str(historial.duracion_total)})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 

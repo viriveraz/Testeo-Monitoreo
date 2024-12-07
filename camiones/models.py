@@ -2,6 +2,7 @@ from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
 from django.contrib.auth.models import User
+from datetime import timedelta
 
 class Chofer(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -49,7 +50,20 @@ class HistorialViaje(models.Model):
     latitud_inicial = models.FloatField(null=True, blank=True) 
     longitud_inicial = models.FloatField(null=True, blank=True) 
     latitud_final = models.FloatField(null=True, blank=True)  
-    longitud_final = models.FloatField(null=True, blank=True) 
+    longitud_final = models.FloatField(null=True, blank=True)
+    duracion_total = models.DurationField(null=True, blank=True)
+    
+    @property
+    def duracion_formateada(self):
+        if self.duracion_total is None or self.duracion_total < timedelta(seconds=0):
+            return "00:00:00"
+        
+        total_seconds = int(self.duracion_total.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
 
     def clean(self):
         if self.fecha_fin and self.fecha_fin < self.fecha_inicio:

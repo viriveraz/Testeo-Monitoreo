@@ -7,12 +7,23 @@
     <title>Monitoreo de Ubicación en Tiempo Real</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'css/monitoreo2.css' %}">
+    <style>
+        #cronometro {
+            display: none;
+            font-size: 1.5rem;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .menu-inferior button {
+            margin: 5px 0;
+        }
+        .menu-inferior div {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-
-    <!-- Cambiar la clase inicial a 'menu-lateral closed' -->
     
-
     <button id="menu-toggle">☰</button>
 
     <div id="map"></div>
@@ -21,29 +32,30 @@
         <img src="https://cdn-icons-png.flaticon.com/512/447/447031.png" alt="Centrar ubicación">
     </button>
 
+    <!-- Cronómetro -->
+
+
     <div class="menu-inferior">
         <div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Geolocalización">
             <span>Geolocalización</span>
         </div>
+        <div id="cronometro">
+            <p>Duración del viaje: <span id="tiempo">00:00:00</span></p>
+        </div>
         <div>
             <button id="iniciar-viaje-btn">Iniciar Viaje</button>
         </div>
         <div>
-            <button ><a href="{% url 'historial_viajes_chofer' %}">Historial</a></button>
+            <button><a href="{% url 'historial_viajes_chofer' %}">Historial</a></button>
         </div>
         <div>
-            <form method="POST" action="{% url 'finalizar_viaje' %}">
+            <form method="POST" id="finalizar-form">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Finalizar Viaje</button>
             </form>
         </div>
-        <div id="modal-mensaje" class="modal">
-            <div class="modal-contenido">
-                <p id="modal-texto"></p>
-                <button id="cerrar-modal" class="btn-modal">Cerrar</button>
-            </div>
-        </div>
+
         <form method="POST" action="{% url 'logout' %}">
             {% csrf_token %}
             <button type="submit" class="btn-logout">Cerrar Sesión</button>
@@ -55,99 +67,80 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-        const menu = document.getElementById('menu-lateral');
-        const menuToggle = document.getElementById('menu-toggle');
-        const modal = document.getElementById('modal-mensaje');
-        const modalTexto = document.getElementById('modal-texto');
-        const closeModalButton = document.getElementById('cerrar-modal');
-        const iniciarViajeBtn = document.getElementById('iniciar-viaje-btn');
-        const finalizarForm = document.querySelector('form[action="{% url "finalizar_viaje" %}"]');
+            let intervalo;
+            let tiempoInicio;
 
-        // Toggle para el menú lateral
-        menuToggle.addEventListener('click', function () {
-            menu.classList.toggle('closed');
-            menu.classList.toggle('open');
-        });
+            const cronometro = document.getElementById("cronometro");
+            const tiempo = document.getElementById("tiempo");
+            const iniciarViajeBtn = document.getElementById("iniciar-viaje-btn");
+            const finalizarForm = document.getElementById("finalizar-form");
 
-        // Centrar el mapa en la ubicación actual
-        document.getElementById('btn-centrar').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    map.setView([lat, lon], 13);
-                });
+            // Función para iniciar el cronómetro
+            function iniciarCronometro() {
+                tiempoInicio = new Date();
+                cronometro.style.display = "block";
+
+                intervalo = setInterval(() => {
+                    const ahora = new Date();
+                    const diferencia = ahora - tiempoInicio;
+
+                    const horas = Math.floor(diferencia / (1000 * 60 * 60));
+                    const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+                    const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+                    tiempo.textContent =
+                        `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+                }, 1000);
             }
-        });
 
-        // Cerrar el modal
-        closeModalButton.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
+            // Función para detener el cronómetro
+            function detenerCronometro() {
+                clearInterval(intervalo);
+                cronometro.style.display = "none";
+            }
 
-
-        // Manejo del botón "Iniciar Viaje"
-        iniciarViajeBtn.addEventListener('click', function () {
-            fetch("{% url 'iniciar_viaje' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        modalTexto.textContent = data.error; // Mostrar error en el modal
-                        modalTexto.className = 'error';
-                    } else {
-                        modalTexto.textContent = data.status; // Mostrar éxito en el modal
-                        modalTexto.className = 'success';
-                    }
-                    modal.style.display = 'flex'; // Mostrar modal
+            // Manejo del botón "Iniciar Viaje"
+            iniciarViajeBtn.addEventListener('click', function () {
+                fetch("{% url 'iniciar_viaje' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    modalTexto.textContent = 'Ocurrió un error inesperado al iniciar el viaje.';
-                    modalTexto.className = 'error';
-                    modal.style.display = 'flex';
-                });
-        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            alert(data.status);
+                            iniciarCronometro();
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
 
-        // Finalizar viaje con manejo de mensajes
-        finalizarForm.addEventListener('submit', function (e) {
-            e.preventDefault(); // Evitar el envío por defecto
+            // Manejo del formulario "Finalizar Viaje"
+            finalizarForm.addEventListener('submit', function (e) {
+                e.preventDefault(); // Evitar envío por defecto
 
-            fetch("{% url 'finalizar_viaje' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        modalTexto.textContent = data.error; // Mensaje de error
-                        modalTexto.className = 'error';
-                    } else {
-                        modalTexto.textContent = data.status; // Mensaje de éxito
-                        modalTexto.className = 'success';
-                    }
-                    modal.style.display = 'flex'; // Mostrar modal
+                fetch("{% url 'finalizar_viaje' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    modalTexto.textContent = 'Ocurrió un error inesperado. Intente nuevamente.';
-                    modalTexto.className = 'error';
-                    modal.style.display = 'flex'; // Mostrar modal
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            alert(`Viaje finalizado. Duración total: ${data.duracion_total}`);
+                            detenerCronometro();
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
         });
-
-        // Solo mostrar el modal si tiene contenido relevante
-        if (modalTexto.textContent.trim() === "") {
-            modal.style.display = 'none';
-        }
-    });
-
     </script>
 </body>
 </html>
