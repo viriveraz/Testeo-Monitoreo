@@ -115,13 +115,14 @@ def usuario_create(request):
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            form.save()
-            # Responde con JSON si es una solicitud AJAX
+            # Crea el usuario pero no guarda la contraseña como texto plano
+            usuario = form.save(commit=False)
+            usuario.set_password(form.cleaned_data['password'])  # Encripta la contraseña
+            usuario.save()
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True})  # No redirige, responde con JSON
-            return redirect('usuarios_list')  # Redirige solo si no es AJAX
+                return JsonResponse({'success': True})  # Responde con JSON si es AJAX
+            return redirect('usuarios_list')  # Redirige si no es AJAX
         else:
-            # Manejo de errores del formulario
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
@@ -133,19 +134,19 @@ def usuario_update(request, id):
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
-            form.save()
-            # Responder con JSON si es una solicitud AJAX
+            usuario = form.save(commit=False)
+            # Solo actualiza la contraseña si fue proporcionada
+            if form.cleaned_data.get('password'):
+                usuario.set_password(form.cleaned_data['password'])  # Encripta la contraseña
+            usuario.save()
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Usuario actualizado correctamente'})
-            # Redirigir si no es una solicitud AJAX
             return redirect('usuarios_list')
         else:
-            # Responder con errores si es una solicitud AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
         form = UsuarioForm(instance=usuario)
-    # Pasa el objeto usuario al contexto
     return render(request, 'usuario_edit.html', {'form': form, 'usuario': usuario})
 
 def usuario_delete(request, id):

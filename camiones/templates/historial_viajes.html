@@ -10,8 +10,27 @@
     <title>Historial de Viajes</title>
 </head>
 <body>
+    <div class="menu-lateral closed" id="menu-lateral">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
+            <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
+            <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
+        </ul>
+        <hr>
+        <div class="usuario-info">
+            <p>Conectado como:</p>
+            <strong>{{ user.first_name }} {{ user.last_name }}</strong> <!-- Django context variable -->
+        </div>  
+        <div class="logout">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>      
+    </div>
+    <button id="menu-toggle">☰</button>
 
-    <button><a href="{% url 'mostrar_mapa' %}">Volver</a></button>
     <div class="container">
         <h2>Historial de Viajes</h2>
 
@@ -51,7 +70,7 @@
                 {% for viaje in historial %}
                 <tr>
                     <td>{{ viaje.camion.nombre }}</td>
-                    <td>{{ viaje.chofer.username }}</td>
+                    <td>{{ viaje.chofer.first_name }} {{ viaje.chofer.last_name }}</td>
                     <td>{{ viaje.fecha_inicio }}</td>
                     <td>{{ viaje.fecha_fin|default:"En curso" }}</td>
                     <td>
@@ -61,8 +80,7 @@
                         <span class="estado-en-curso">En curso</span>
                         {% endif %}
                     </td>
-                    <td>
-                        
+                    <td>{{ viaje.duracion_formateada }}</td>
                     </td>                    
                 </tr>
                 {% endfor %}

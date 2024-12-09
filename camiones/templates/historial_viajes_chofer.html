@@ -52,7 +52,7 @@
                 {% for viaje in historial %}
                 <tr>
                     <td>{{ viaje.camion.nombre }}</td>
-                    <td>{{ viaje.chofer.username }}</td>
+                    <td>{{ viaje.chofer.first_name }} {{ viaje.chofer.last_name }}</td>
                     <td>{{ viaje.fecha_inicio }}</td>
                     <td>{{ viaje.fecha_fin|default:"En curso" }}</td>
                     <td>

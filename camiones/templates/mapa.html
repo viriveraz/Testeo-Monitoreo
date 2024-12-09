@@ -15,17 +15,15 @@
     <div class="menu-lateral closed" id="menu-lateral">
         <h2>Menú</h2>
         <ul>
-            <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
             <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
             <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
-            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
             <li><a href="{% url 'historial_viajes' %}">Historial De Viajes</a></li>
             <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
         </ul>
         <hr>
         <div class="usuario-info">
             <p>Conectado como:</p>
-            <strong>{{ user.username }}</strong> <!-- Django context variable -->
+            <strong>{{ user.first_name }} {{ user.last_name }}</strong><!-- Django context variable -->
         </div>  
         <div class="logout">
             <form method="POST" action="{% url 'logout' %}">

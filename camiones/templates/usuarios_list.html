@@ -16,16 +16,14 @@
         <h2>Menú</h2>
         <ul>
             <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
-            <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
             <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
-            <li><a href="{% url 'dispositivos_admin' %}">Monitoreo de Ubicación</a></li>
             <li><a href="{% url 'historial_viajes' %}">Historial De Viajes</a></li>
             <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
         </ul>
         <hr>
         <div class="usuario-info">
             <p>Conectado como:</p>
-            <strong>{{ user.username }}</strong> <!-- Django context variable -->
+            <strong>{{ user.first_name }} {{ user.last_name }}</strong> <!-- Django context variable -->
         </div>  
         <div class="logout">
             <form method="POST" action="{% url 'logout' %}">
@@ -51,9 +49,9 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card mb-4 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">{{ usuario.username }}</h5>
+                        <h5 class="card-title"> {{ usuario.first_name }} {{ usuario.last_name }} </h5>
                         <p class="card-text">
-                            <strong>Nombre completo:</strong> {{ usuario.first_name }} {{ usuario.last_name }}<br>
+                            <strong>Rut :</strong> {{ usuario.username }} <br>
                             <strong>Email:</strong> {{ usuario.email }}<br>
                             <strong>Fecha de registro:</strong> {{ usuario.date_joined|date:"d-m-Y" }}
                         </p>

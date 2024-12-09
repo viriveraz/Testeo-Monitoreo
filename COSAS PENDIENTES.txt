@@ -2,11 +2,16 @@ COSAS PENDIENTES
 -Cambiar solo visualizacion de palabra "Chofer" por Conductor
 -cambiar formato de fecha de HistorialViajes a Español
 -revisar "PAGINATOR" no funciona 
--cambiar diseño de botones VOLVER
--Mejorar nombres ficticios de usuarios
--al crear usuarios no deja ingresar con sus credenciales(CR REVISANDO)
--Monitoreo de ubicacion en tiempo real (Funcion??)
+-cambiar diseño de botones VOLVER *LISTO*
+-Mejorar nombres ficticios de usuarios *LISTO*
+-al crear usuarios no deja ingresar con sus credenciales *LISTO*    
+-Monitoreo de ubicacion en tiempo real (Funcion??) mostrar ubicaciones de conductores en mapa.html
 -HistorialViajes (template) Agregar el tiempo del viaje
 -estadistica (mapa) colocar punto donde terminaron los viajes  
--estadistica (tiempo Promedio) no toma el tiempo promedio
+-estadistica (tiempo Promedio) no toma el tiempo promedio *listo*
 -estadistica Mejorar diseño sss 
+
+
+IDEAS
+-mapa de chofer mostrar ruta asignada
+-mapa de chofer mostrar camion asignado
