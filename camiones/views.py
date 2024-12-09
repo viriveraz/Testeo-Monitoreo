@@ -1,4 +1,5 @@
 import json
+from django.db.models import Count, Avg
 from django.utils.timezone import now, timedelta
 import plotly.graph_objects as go
 from plotly.offline import plot
@@ -357,9 +358,21 @@ def esta_conectado(self):
     return timezone.now() - self.ultima_actualizacion <= timezone.timedelta(minutes=5)
 
 
+
+
 def estadistica(request):
-    # Contar los viajes por chofer
-    viajes_por_chofer = HistorialViaje.objects.values('chofer__username').annotate(cantidad_viajes=Count('id')).order_by('-cantidad_viajes')
+    # Contar los viajes por chofer y calcular el tiempo promedio de viaje
+    viajes_por_chofer = HistorialViaje.objects.values('chofer__username') \
+        .annotate(cantidad_viajes=Count('id'), tiempo_promedio=Avg('duracion_total')) \
+        .order_by('-cantidad_viajes')
+
+    # Convertir el tiempo promedio (que es un timedelta) a minutos
+    for item in viajes_por_chofer:
+        if item['tiempo_promedio']:
+            # Convertir timedelta a minutos
+            item['tiempo_promedio'] = item['tiempo_promedio'].total_seconds() / 60  # tiempo en minutos
+        else:
+            item['tiempo_promedio'] = 0  # En caso de que no haya duración, asignar 0 minutos
 
     # Calcular los camiones conectados
     camiones = Camion.objects.all()
@@ -368,6 +381,7 @@ def estadistica(request):
     # Preparar los datos para el gráfico de barras
     nombres_choferes = [item['chofer__username'] for item in viajes_por_chofer]
     cantidad_viajes = [item['cantidad_viajes'] for item in viajes_por_chofer]
+    tiempos_promedio = [item['tiempo_promedio'] for item in viajes_por_chofer]
 
     # Crear el gráfico de barras con Plotly
     fig = go.Figure(data=[go.Bar(
@@ -375,7 +389,7 @@ def estadistica(request):
         y=cantidad_viajes,
         text=cantidad_viajes,
         textposition='auto',
-        marker=dict(color='royalblue')  # Color de las barras
+        marker=dict(color='#4CAF50')  # Color de las barras
     )])
 
     # Personalización del gráfico (tamaño, colores, fuentes)
@@ -422,7 +436,7 @@ def estadistica(request):
 
     # Contexto para la plantilla
     viajes_totales = HistorialViaje.objects.all()
-        # Calcular viajes en curso
+    # Calcular viajes en curso
     viajes_en_curso = viajes_totales.filter(estado="En curso").count()
 
     # Calcular viajes completados
@@ -430,11 +444,10 @@ def estadistica(request):
 
     # Calcular conductores online (camiones conectados)
     camiones_conectados = Camion.objects.filter(
-        ultima_actualizacion__gte=now() - timedelta(minutes=5)
+        ultima_actualizacion__gte=timezone.now() - timedelta(minutes=5)
     ).count()
 
-
-
+    # Preparar el contexto con los datos que quieres mostrar en la plantilla
     context = {
         'viajes_totales': viajes_totales.count(),
         'viajes_en_curso': viajes_en_curso,
@@ -442,12 +455,10 @@ def estadistica(request):
         'graph_html': graph_html,
         'viajes_por_chofer': viajes_por_chofer,
         'choferes_online': choferes_online,
-        'map_html': map_html  # Agregar el mapa al contexto
+        'map_html': map_html,  # Agregar el mapa al contexto
     }
 
     return render(request, 'estadistica.html', context)
-
-
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)

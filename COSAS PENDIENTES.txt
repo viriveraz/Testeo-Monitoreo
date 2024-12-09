@@ -1,0 +1,12 @@
+COSAS PENDIENTES
+-Cambiar solo visualizacion de palabra "Chofer" por Conductor
+-cambiar formato de fecha de HistorialViajes a Español
+-revisar "PAGINATOR" no funciona 
+-cambiar diseño de botones VOLVER
+-Mejorar nombres ficticios de usuarios
+-al crear usuarios no deja ingresar con sus credenciales
+-Monitoreo de ubicacion en tiempo real (Funcion??)
+-HistorialViajes (template) Agregar el tiempo del viaje
+-estadistica (mapa) colocar punto donde terminaron los viajes  
+-estadistica (tiempo Promedio) no toma el tiempo promedio
+-estadistica Mejorar diseño sss 

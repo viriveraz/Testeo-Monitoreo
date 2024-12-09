@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/historial2.css' %}">
     <title>Lista de Camiones</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
@@ -25,21 +26,38 @@
             </div>
             <div class="card">
                 <h3>Conductores En Línea {{ choferes_online }}</h3>
-                
             </div>
         </div>
-        
     </div>
+    
     <div class="barras">
         <div>
             {{ graph_html|safe }}
         </div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Chofer</th>
+                        <th>Tiempo Promedio (minutos)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chofer in viajes_por_chofer %}
+                        <tr>
+                            <td>{{ chofer.chofer__username }}</td>
+                            <td>{{ chofer.tiempo_promedio|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         <div class="mapa">
             {{ map_html|safe }}
         </div>
-        
     </div>
-    
-    
+
+    <!-- Tabla de Choferes y Tiempo Promedio -->
+
 </body>
 </html>
