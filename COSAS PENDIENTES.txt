@@ -4,7 +4,7 @@ COSAS PENDIENTES
 -revisar "PAGINATOR" no funciona 
 -cambiar diseño de botones VOLVER
 -Mejorar nombres ficticios de usuarios
--al crear usuarios no deja ingresar con sus credenciales
+-al crear usuarios no deja ingresar con sus credenciales(CR REVISANDO)
 -Monitoreo de ubicacion en tiempo real (Funcion??)
 -HistorialViajes (template) Agregar el tiempo del viaje
 -estadistica (mapa) colocar punto donde terminaron los viajes  
