@@ -8,6 +8,10 @@ class Chofer(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
     rut = models.CharField(max_length=12, unique=True)  # RUT de cada chofer
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    telefono = models.CharField(max_length=15, null=True, blank=True)  # Número de teléfono en formato internacional
+    api_key = models.CharField(max_length=20, null=True, blank=True)  # API Key de CallMeBot
+
+
 
     def __str__(self):
         return f"{self.usuario.username} - {self.rut}"
@@ -71,4 +75,12 @@ class HistorialViaje(models.Model):
 
     def __str__(self):
         return f"Viaje de {self.chofer.username} en {self.camion.nombre}"
+    
+class MensajePredefinido(models.Model):
+    titulo = models.CharField(max_length=100)
+    cuerpo = models.TextField()
+
+    def __str__(self):
+        return self.titulo
+
 

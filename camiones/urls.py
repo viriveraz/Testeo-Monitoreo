@@ -34,6 +34,6 @@ urlpatterns = [
 
     path('estadistica/', views.estadistica, name='estadistica'),
 
-
+    path('enviar-mensaje/<int:mensaje_id>/', views.enviar_mensaje_predefinido, name='enviar_mensaje_predefinido'),
 
 ]

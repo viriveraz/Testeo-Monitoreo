@@ -7,17 +7,17 @@ from django.db.models import Count
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 import openpyxl
-from .models import AsignacionChofer, Camion, HistorialViaje
+from .models import AsignacionChofer, Camion, HistorialViaje, Chofer, MensajePredefinido
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from .forms import UsuarioForm, CamionForm
 from django.views.decorators.csrf import csrf_protect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-
+from camiones.utils import enviar_mensaje_whatsapp
 
 # Obtener ubicación del camión
 def obtener_ubicacion(request, camion_id):
@@ -33,7 +33,8 @@ def obtener_ubicacion(request, camion_id):
 @login_required
 def mostrar_mapa(request):
     if request.user.is_staff:
-        return render(request, 'mapa.html')
+        mensajes_predefinidos = MensajePredefinido.objects.all()  # Obtener mensajes predefinidos
+        return render(request, 'mapa.html', {'mensajes_predefinidos': mensajes_predefinidos})
     else:
         return render(request, 'mapa_chofer.html')
 
@@ -446,3 +447,29 @@ def estadistica(request):
 
     return render(request, 'estadistica.html', context)
 
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def enviar_mensaje_predefinido(request, mensaje_id):
+    """
+    Envía un mensaje predefinido a todos los choferes.
+    """
+    try:
+        mensaje = MensajePredefinido.objects.get(id=mensaje_id)
+        choferes = Chofer.objects.filter(telefono__isnull=False, api_key__isnull=False)
+
+        resultados = []
+        for chofer in choferes:
+            cuerpo_personalizado = mensaje.cuerpo.replace("[NOMBRE_CHOFER]", chofer.usuario.username)
+            exito = enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, cuerpo_personalizado)
+            resultados.append({
+                "chofer": chofer.usuario.username,
+                "numero": chofer.telefono,
+                "resultado": "Éxito" if exito else "Fallo"
+            })
+
+        return JsonResponse({"status": "completado", "detalles": resultados})
+
+    except MensajePredefinido.DoesNotExist:
+        return JsonResponse({"status": "error", "mensaje": "El mensaje seleccionado no existe."})
