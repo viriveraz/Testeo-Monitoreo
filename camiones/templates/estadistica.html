@@ -2,62 +2,88 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" href="{% static 'css/styles3.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles4.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/historial2.css' %}">
     <title>Lista de Camiones</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    
 </head>
 <body>
     <div>
-        <button><a href="{% url 'mostrar_mapa' %}">Volver</a></button>
+        <h2>Historial de Viajes</h2>
+        <form method="GET" action="">
+            <label for="fecha_inicio">Desde:</label>
+            <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ fecha_inicio|date:'Y-m-d' }}">
+            
+            <label for="fecha_fin">Hasta:</label>
+            <input type="date" name="fecha_fin" id="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}">
+            <button type="submit">Filtrar</button>
+        </form>
+
         <div class="card-container">
             <div class="card">
-                <h3>Viajes Totales {{ viajes_totales }}</h3>
+                <h3>Viajes Totales: {{ viajes_totales }}</h3>
             </div>
             <div class="card">
-                <h3>Viajes en curso {{ viajes_en_curso }}</h3>
+                <h3>Viajes en curso: {{ viajes_en_curso }}</h3>
             </div>
             <div class="card">
-                <h3>Viajes Completados {{ viajes_completados }}</h3>
+                <h3>Viajes Completados: {{ viajes_completados }}</h3>
             </div>
             <div class="card">
-                <h3>Conductores En Línea {{ choferes_online }}</h3>
+                <h3>Conductores En Línea: {{ choferes_en_linea }}</h3>
             </div>
         </div>
     </div>
     
     <div class="barras">
+        
         <div>
-            {{ graph_html|safe }}
+            {% if sin_viajes %}
+                <div class="message">No hay datos para mostrar en la tabla.</div>
+            {% else %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Chofer</th>
+                            <th>Tiempo Promedio (minutos)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chofer in viajes_por_chofer %}
+                            <tr>
+                                <td>{{ chofer.chofer__username }}</td>
+                                <td>{{ chofer.tiempo_promedio|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
         <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Chofer</th>
-                        <th>Tiempo Promedio (minutos)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for chofer in viajes_por_chofer %}
-                        <tr>
-                            <td>{{ chofer.chofer__username }}</td>
-                            <td>{{ chofer.tiempo_promedio|floatformat:2 }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if sin_viajes %}
+                <div class="message">No se encuentran viajes en el rango de fechas seleccionado.</div>
+            {% else %}
+                <div class="graph">{{ graph_html_conductor|safe }}</div> <!-- Gráfico de viajes por conductor -->
+            {% endif %}
         </div>
         <div class="mapa">
-            {{ map_html|safe }}
+            {% if sin_viajes %}
+                <div class="message">No hay mapa disponible sin viajes.</div>
+            {% else %}
+                <div class="map">{{ map_html|safe }}</div>
+            {% endif %}
         </div>
     </div>
-
-    <!-- Tabla de Choferes y Tiempo Promedio -->
-
+    <div>
+        {% if sin_viajes %}
+            <div class="message">No se encuentran viajes en el rango de fechas seleccionado.</div>
+        {% else %}
+            <div class="graph">{{ graph_html_mes|safe }}</div> <!-- Gráfico de viajes por mes -->
+        {% endif %}
+    </div>
+    
 </body>
 </html>

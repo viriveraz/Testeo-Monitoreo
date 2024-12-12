@@ -1,4 +1,10 @@
 import json
+from django.db.models.functions import TruncMonth
+import plotly.graph_objects as go
+from plotly.offline import plot
+from datetime import datetime, timedelta
+from django.db.models import Count
+from datetime import datetime
 from django.db.models import Count, Avg
 from django.utils.timezone import now, timedelta
 import plotly.graph_objects as go
@@ -360,105 +366,158 @@ def esta_conectado(self):
 
 
 
-
 def estadistica(request):
-    # Contar los viajes por chofer y calcular el tiempo promedio de viaje
-    viajes_por_chofer = HistorialViaje.objects.values('chofer__username') \
-        .annotate(cantidad_viajes=Count('id'), tiempo_promedio=Avg('duracion_total')) \
-        .order_by('-cantidad_viajes')
+    # Filtrar por rango de fechas si están presentes
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
 
-    # Convertir el tiempo promedio (que es un timedelta) a minutos
-    for item in viajes_por_chofer:
-        if item['tiempo_promedio']:
-            # Convertir timedelta a minutos
-            item['tiempo_promedio'] = item['tiempo_promedio'].total_seconds() / 60  # tiempo en minutos
-        else:
-            item['tiempo_promedio'] = 0  # En caso de que no haya duración, asignar 0 minutos
-
-    # Calcular los camiones conectados
-    camiones = Camion.objects.all()
-    choferes_online = sum(1 for camion in camiones if camion.esta_conectado())  # Contar los camiones conectados
-
-    # Preparar los datos para el gráfico de barras
-    nombres_choferes = [item['chofer__username'] for item in viajes_por_chofer]
-    cantidad_viajes = [item['cantidad_viajes'] for item in viajes_por_chofer]
-    tiempos_promedio = [item['tiempo_promedio'] for item in viajes_por_chofer]
-
-    # Crear el gráfico de barras con Plotly
-    fig = go.Figure(data=[go.Bar(
-        x=nombres_choferes,
-        y=cantidad_viajes,
-        text=cantidad_viajes,
-        textposition='auto',
-        marker=dict(color='#4CAF50')  # Color de las barras
-    )])
-
-    # Personalización del gráfico (tamaño, colores, fuentes)
-    fig.update_layout(
-        title="Viajes por Conductor",
-        legend_title="Conductor",
-        margin=dict(l=20, r=0, t=50, b=0),
-        width=350,
-        height=300,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
-    )
-
-    # Convertir el gráfico de barras a HTML
-    graph_html = plot(fig, output_type='div')
-
-    # Crear el mapa con Plotly centrado en Santiago de Chile
-    map_fig = go.Figure(go.Scattermapbox(
-        mode='markers',
-        lat=[-33.4489],  # Latitud de Santiago
-        lon=[-70.6693],  # Longitud de Santiago
-        text=["Santiago de Chile"],  # Texto que se muestra al pasar el mouse sobre el marcador
-        marker=dict(size=12, color='blue', opacity=0.7),
-    ))
-
-    # Configuración del layout del mapa
-    map_fig.update_layout(
-        title="Mapa de Santiago de Chile",
-        mapbox=dict(
-            style="open-street-map",  # Estilo del mapa
-            center=dict(lat=-33.4489, lon=-70.6693),  # Coordenadas de Santiago
-            zoom=12,  # Zoom adecuado para la ciudad
-            accesstoken="tu-token-de-mapbox",  # Asegúrate de usar tu token si usas Mapbox
-            pitch=0,  # Deshabilitar inclinación del mapa
-            bearing=0,  # Deshabilitar rotación del mapa
-        ),
-        height=600,  # Establecer la altura del mapa
-        width=600,   # Establecer el ancho del mapa
-        margin=dict(l=0, r=0, t=0, b=0),  # Eliminar márgenes
-    )
-
-    # Convertir el mapa a HTML
-    map_html = plot(map_fig, output_type='div')
-
-    # Contexto para la plantilla
     viajes_totales = HistorialViaje.objects.all()
-    # Calcular viajes en curso
-    viajes_en_curso = viajes_totales.filter(estado="En curso").count()
 
-    # Calcular viajes completados
-    viajes_completados = viajes_totales.filter(estado="Finalizado").count()
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+            fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d")
+            viajes_totales = viajes_totales.filter(fecha_inicio__date__gte=fecha_inicio, fecha_fin__date__lte=fecha_fin)
+        except ValueError:
+            # Si el formato de la fecha no es válido, ignorar el filtro
+            pass
+    else:
+        # Si no se proporcionaron fechas, obtener el primer y último día del mes actual
+        today = datetime.today()
+        fecha_inicio = today.replace(day=1)  # Primer día del mes actual
+        next_month = today.replace(day=28) + timedelta(days=4)  # Esto siempre nos da un día en el siguiente mes
+        fecha_fin = next_month - timedelta(days=next_month.day)  # El último día del mes actual
 
-    # Calcular conductores online (camiones conectados)
-    camiones_conectados = Camion.objects.filter(
-        ultima_actualizacion__gte=timezone.now() - timedelta(minutes=5)
-    ).count()
+        viajes_totales = viajes_totales.filter(fecha_inicio__date__gte=fecha_inicio, fecha_fin__date__lte=fecha_fin)
 
-    # Preparar el contexto con los datos que quieres mostrar en la plantilla
+    # Variable para verificar si hay viajes
+    sin_viajes = not viajes_totales.exists()
+
+    # Datos para los gráficos y mapa si hay viajes
+    viajes_por_chofer = []
+    viajes_por_mes = []
+    graph_html_mes = ""
+    graph_html_conductor = ""
+    map_html = ""
+
+    if not sin_viajes:
+        # Gráfico de cantidad de viajes por mes
+        viajes_por_mes = viajes_totales.annotate(mes=TruncMonth('fecha_inicio')) \
+            .values('mes') \
+            .annotate(cantidad_viajes=Count('id')) \
+            .order_by('mes')
+
+        # Crear una lista con los meses y las cantidades de viajes
+        meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        viajes_por_mes_dict = {mes: 0 for mes in meses}
+        for item in viajes_por_mes:
+            mes = item['mes'].month - 1  # Ajustar para índice 0 basado
+            viajes_por_mes_dict[meses[mes]] = item['cantidad_viajes']
+
+        # Crear el gráfico de viajes por mes (puntos y línea)
+        fig_mes = go.Figure(data=[go.Scatter(
+            x=meses,
+            y=[viajes_por_mes_dict[mes] for mes in meses],
+            mode='lines+markers',  # Puntos conectados por una línea
+            marker=dict(color='#4CAF50', size=8),  # Color y tamaño de los puntos
+            line=dict(color='#4CAF50', width=2),  # Color y grosor de la línea
+            text=[viajes_por_mes_dict[mes] for mes in meses],
+            textposition='top center'  # Mostrar el número de viajes encima de los puntos
+        )])
+
+        fig_mes.update_layout(
+            title="Cantidad de Viajes por Mes (Últimos 12 meses)",
+            width=1750,
+            height=300,
+            plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
+            paper_bgcolor='rgba(0,0,0,0)',  # Sin fondo
+            xaxis=dict(showgrid=False),  # Sin líneas de la cuadrícula en el eje x
+            yaxis=dict(showgrid=True),  # Mostrar cuadrícula en el eje y
+            showlegend=False  # Sin leyenda
+        )
+        graph_html_mes = plot(fig_mes, output_type='div')
+
+        # Gráfico de viajes por conductor
+        viajes_por_chofer = viajes_totales.values('chofer__username') \
+            .annotate(cantidad_viajes=Count('id'), tiempo_promedio=Avg('duracion_total')) \
+            .order_by('-cantidad_viajes')
+
+        for item in viajes_por_chofer:
+            if item['tiempo_promedio']:
+                item['tiempo_promedio'] = item['tiempo_promedio'].total_seconds() / 60  # tiempo en minutos
+            else:
+                item['tiempo_promedio'] = 0
+
+        # Crear el gráfico de viajes por conductor
+        fig_conductor = go.Figure(data=[go.Bar(
+            x=[item['chofer__username'] for item in viajes_por_chofer],
+            y=[item['cantidad_viajes'] for item in viajes_por_chofer],
+            text=[item['cantidad_viajes'] for item in viajes_por_chofer],
+            textposition='auto',
+            marker=dict(color='#4CAF50')
+        )])
+        fig_conductor.update_layout(
+            title="Viajes por Conductor",
+            width=350,
+            height=300,
+            plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
+            paper_bgcolor='rgba(0,0,0,0)'  # Sin fondo
+        )
+        graph_html_conductor = plot(fig_conductor, output_type='div')
+
+        # Obtener las coordenadas de los viajes filtrados para el mapa
+        latitudes = []
+        longitudes = []
+        textos = []  # Para mostrar información adicional en cada punto del mapa
+
+        for viaje in viajes_totales:
+            if viaje.latitud_final and viaje.longitud_final:
+                latitudes.append(viaje.latitud_final)
+                longitudes.append(viaje.longitud_final)
+                textos.append(f"Viaje ID: {viaje.id}, {viaje.chofer.username}")
+
+        # Verificar si hay coordenadas válidas
+        if latitudes:
+            # Crear el gráfico de mapa
+            map_fig = go.Figure(go.Scattermapbox(
+                mode='markers',
+                lat=latitudes,
+                lon=longitudes,
+                text=textos,  # Información que se mostrará al pasar el mouse
+                marker=dict(size=12, color='#4CAF50'),
+            ))
+            map_fig.update_layout(
+                mapbox=dict(
+                    style="open-street-map",
+                    center=dict(lat=sum(latitudes)/len(latitudes), lon=sum(longitudes)/len(longitudes)),  # Centra el mapa
+                    zoom=10,  # Ajusta el nivel de zoom
+                ),
+                height=300,  # Ajusta la altura si es necesario
+                width=800,   # Ajusta el ancho si es necesario
+                plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
+                paper_bgcolor='rgba(0,0,0,0)',  # Sin fondo en el papel
+                margin=dict(l=0, r=0, t=0, b=0),  # Eliminar márgenes
+            )
+            map_html = plot(map_fig, output_type='div')
+        else:
+            map_html = ""  # Si no hay coordenadas, dejar el mapa vacío
+
+        # Contar los choferes "en línea" (con viajes en curso)
+        choferes_en_linea = viajes_totales.filter(estado="En curso").values('chofer__username').distinct().count()
+
     context = {
         'viajes_totales': viajes_totales.count(),
-        'viajes_en_curso': viajes_en_curso,
-        'viajes_completados': viajes_completados,
-        'graph_html': graph_html,
+        'viajes_en_curso': viajes_totales.filter(estado="En curso").count(),
+        'viajes_completados': viajes_totales.filter(estado="Finalizado").count(),
+        'graph_html_mes': graph_html_mes,
+        'graph_html_conductor': graph_html_conductor,
         'viajes_por_chofer': viajes_por_chofer,
-        'choferes_online': choferes_online,
-        'map_html': map_html,  # Agregar el mapa al contexto
+        'map_html': map_html,  # El HTML del mapa con los puntos finales de los viajes
+        'sin_viajes': sin_viajes,  # Indicador de que no hay viajes
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'choferes_en_linea': choferes_en_linea,  # Número de choferes en línea
     }
-
     return render(request, 'estadistica.html', context)
 
 @login_required
