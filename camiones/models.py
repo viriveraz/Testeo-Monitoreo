@@ -82,5 +82,47 @@ class MensajePredefinido(models.Model):
 
     def __str__(self):
         return self.titulo
+    
 
+from django.db import models
+from django.utils import timezone
+
+class Viaje(models.Model):
+    id = models.AutoField(primary_key=True)
+    fecha_viaje = models.DateTimeField(default=timezone.now)
+    origen = models.CharField(max_length=255)
+    patente = models.CharField(max_length=20)
+    estado = models.CharField(max_length=50, choices=[
+        ('pendiente', 'Pendiente'),
+        ('en curso', 'En Curso'),
+        ('finalizado', 'Finalizado')
+    ], default='pendiente')
+    transporte = models.CharField(max_length=255)
+    producto = models.CharField(max_length=255)
+    fecha_llegada = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    foto = models.ImageField(upload_to='viajes/', null=True, blank=True)
+    latitud_inicial = models.FloatField(null=True, blank=True)
+    longitud_inicial = models.FloatField(null=True, blank=True)
+    latitud_final = models.FloatField(null=True, blank=True)
+    longitud_final = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Viaje {self.id} - {self.patente} ({self.estado})"
+
+    def clean(self):
+        if self.fecha_llegada and self.fecha_llegada < self.fecha_viaje:
+            raise ValidationError("La fecha de llegada no puede ser anterior a la fecha de viaje.")
+
+        if self.latitud_inicial and not -90 <= self.latitud_inicial <= 90:
+            raise ValidationError("La latitud inicial debe estar entre -90 y 90.")
+
+        if self.longitud_inicial and not -180 <= self.longitud_inicial <= 180:
+            raise ValidationError("La longitud inicial debe estar entre -180 y 180.")
+
+        if self.latitud_final and not -90 <= self.latitud_final <= 90:
+            raise ValidationError("La latitud final debe estar entre -90 y 90.")
+
+        if self.longitud_final and not -180 <= self.longitud_final <= 180:
+            raise ValidationError("La longitud final debe estar entre -180 y 180.")
 

@@ -8,6 +8,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Viajes</title>
+    <style>
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .popup-content {
+            position: relative;
+            margin: 10% auto;
+            background: white;
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #mapa {
+            width: 100%;
+            height: 400px;
+        }
+
+        .menu-lateral {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background: #333;
+            color: #fff;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .menu-lateral.open {
+            transform: translateX(0);
+        }
+
+        .menu-lateral.closed {
+            transform: translateX(-100%);
+        }
+
+        #menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
 </head>
 <body>
     <div class="menu-lateral closed" id="menu-lateral">
@@ -15,19 +83,19 @@
         <ul>
             <li><a href="{% url 'mostrar_mapa' %}">Geolocalización</a></li>
             <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
-            <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
+            <li><a href="{% url 'estadistica' %}">Estadística</a></li>
         </ul>
         <hr>
         <div class="usuario-info">
             <p>Conectado como:</p>
-            <strong>{{ user.first_name }} {{ user.last_name }}</strong> <!-- Django context variable -->
-        </div>  
+            <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+        </div>
         <div class="logout">
             <form method="POST" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button type="submit" class="btn-logout">Cerrar Sesión</button>
             </form>
-        </div>      
+        </div>
     </div>
     <button id="menu-toggle">☰</button>
 
@@ -37,19 +105,11 @@
         <!-- Formulario de filtrado -->
         <form method="GET" action="">
             <label for="fecha_inicio">Desde:</label>
-            <input type="date" name="fecha_inicio" id="fecha_inicio">
-        
+            <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ fecha_inicio|date:'Y-m-d' }}">
+
             <label for="fecha_fin">Hasta:</label>
-            <input type="date" name="fecha_fin" id="fecha_fin">
-        
-            <label for="camion_id">Camión:</label>
-            <select name="camion_id" id="camion_id">
-                <option value="">Todos</option>
-                {% for camion in camiones %}
-                <option value="{{ camion.id }}">{{ camion.nombre }}</option>
-                {% endfor %}
-            </select>
-        
+            <input type="date" name="fecha_fin" id="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}">
+
             <button type="submit">Filtrar</button>
         </form>
 
@@ -64,6 +124,7 @@
                     <th>Fecha de Fin</th>
                     <th>Estado</th>
                     <th>Tiempo</th>
+                    <th>Ruta</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,48 +142,83 @@
                         {% endif %}
                     </td>
                     <td>{{ viaje.duracion_formateada }}</td>
-                    </td>                    
+                    <td>
+                        <button 
+                            class="btn-mapa" 
+                            data-lat-inicio="{{ viaje.latitud_inicial }}" 
+                            data-lon-inicio="{{ viaje.longitud_inicial }}"
+                            data-lat-fin="{{ viaje.latitud_final }}" 
+                            data-lon-fin="{{ viaje.longitud_final }}">
+                            Ver Ruta
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <div class="exportar-container">
-            <a href="{% url 'exportar_historial' %}" class="btn-exportar-excel">
-                <i class="fas fa-file-excel"></i> Exportar a Excel
-            </a>
-        </div>
-
-        <!-- Paginación -->
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; Primera</a>
-                <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-            {% endif %}
-        
-            <span class="current">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-        
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
-            {% endif %}
-        </div>
-        
         {% else %}
         <p class="no-results">No se encontraron viajes para los filtros seleccionados.</p>
         {% endif %}
     </div>
 
+    <!-- Popup para el mapa -->
+    <div id="mapa-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+            <div id="mapa"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener("DOMContentLoaded", function () {
+            const popup = document.getElementById("mapa-popup");
+            const closePopup = document.querySelector(".close-popup");
             const menu = document.getElementById('menu-lateral');
             const menuToggle = document.getElementById('menu-toggle');
+
+            document.querySelectorAll(".btn-mapa").forEach(button => {
+                button.addEventListener("click", function () {
+                    const latInicio = parseFloat(this.dataset.latInicio);
+                    const lonInicio = parseFloat(this.dataset.lonInicio);
+                    const latFin = parseFloat(this.dataset.latFin);
+                    const lonFin = parseFloat(this.dataset.lonFin);
+
+                    const data = [
+                        {
+                            type: "scattermapbox",
+                            mode: "markers+lines",
+                            lat: [latInicio || -33.4489, latFin || -33.4489],
+                            lon: [lonInicio || -70.6693, lonFin || -70.6693],
+                            marker: { size: 10 },
+                            text: ["Inicio", "Fin"]
+                        }
+                    ];
+
+                    const layout = {
+                        mapbox: {
+                            style: "open-street-map",
+                            center: { lat: -33.4489, lon: -70.6693 },
+                            zoom: 10
+                        },
+                        margin: { t: 0, b: 0, l: 0, r: 0 }
+                    };
+
+                    Plotly.newPlot("mapa", data, layout);
+
+                    popup.style.display = "block";
+                });
+            });
+
+            closePopup.addEventListener("click", () => {
+                popup.style.display = "none";
+            });
+
             menuToggle.addEventListener('click', function () {
-                menu.classList.toggle('closed');
                 menu.classList.toggle('open');
+                menu.classList.toggle('closed');
             });
         });
     </script>
-    
 </body>
 </html>

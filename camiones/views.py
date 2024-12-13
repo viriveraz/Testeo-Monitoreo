@@ -323,7 +323,6 @@ def finalizar_viaje(request):
 
 
 
-@login_required
 def historial_viajes(request):
     historial = HistorialViaje.objects.all()
 
@@ -342,9 +341,51 @@ def historial_viajes(request):
     if camion_id:
         historial = historial.filter(camion_id=camion_id)
 
-    return render(request, 'historial_viajes.html', {'historial': historial})
+    # Generar mapa con Plotly
+    puntos = []
+    textos = []
 
-@login_required
+    for viaje in historial:
+        if viaje.latitud_inicial and viaje.longitud_inicial:
+            puntos.append((viaje.latitud_inicial, viaje.longitud_inicial))
+            textos.append(f"Inicio: {viaje.camion.nombre}, {viaje.chofer.first_name} {viaje.chofer.last_name}")
+
+        if viaje.latitud_final and viaje.longitud_final:
+            puntos.append((viaje.latitud_final, viaje.longitud_final))
+            textos.append(f"Fin: {viaje.camion.nombre}, {viaje.chofer.first_name} {viaje.chofer.last_name}")
+
+    if puntos:
+        latitudes, longitudes = zip(*puntos)
+        fig = go.Figure(go.Scattermapbox(
+            mode="markers+lines",
+            lat=latitudes,
+            lon=longitudes,
+            text=textos,
+            marker=dict(size=10, color='blue'),
+        ))
+
+        fig.update_layout(
+            mapbox=dict(
+                style="open-street-map",
+                zoom=5,
+                center=dict(lat=sum(latitudes) / len(latitudes), lon=sum(longitudes) / len(longitudes)),
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+        map_html = plot(fig, output_type="div")
+    else:
+        map_html = "<p>No hay datos para mostrar en el mapa.</p>"
+
+    return render(request, 'historial_viajes.html', {
+        'historial': historial,
+        'map_html': map_html,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+    })
+
+
+    
 def historial_viajes_chofer(request):
     historial = HistorialViaje.objects.all()
 
@@ -405,6 +446,42 @@ def esta_conectado(self):
     return timezone.now() - self.ultima_actualizacion <= timezone.timedelta(minutes=5)
 
 
+
+def generar_mapa_plotly(historial_viajes):
+    puntos = []
+    textos = []
+
+    for viaje in historial_viajes:
+        if viaje.latitud_inicial and viaje.longitud_inicial:
+            puntos.append((viaje.latitud_inicial, viaje.longitud_inicial))
+            textos.append(f"Inicio: {viaje.chofer.first_name} {viaje.chofer.last_name} ({viaje.camion.nombre})")
+
+        if viaje.latitud_final and viaje.longitud_final:
+            puntos.append((viaje.latitud_final, viaje.longitud_final))
+            textos.append(f"Fin: {viaje.chofer.first_name} {viaje.chofer.last_name} ({viaje.camion.nombre})")
+
+    if puntos:
+        latitudes, longitudes = zip(*puntos)
+        fig = go.Figure(go.Scattermapbox(
+            mode="markers+lines",
+            lat=latitudes,
+            lon=longitudes,
+            text=textos,
+            marker=dict(size=10, color='blue'),
+        ))
+
+        fig.update_layout(
+            mapbox=dict(
+                style="open-street-map",
+                zoom=3,
+                center=dict(lat=sum(latitudes) / len(latitudes), lon=sum(longitudes) / len(longitudes)),
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+        return plot(fig, output_type="div")
+
+    return "<p>No hay datos para mostrar en el mapa.</p>"
 
 
 
