@@ -40,8 +40,10 @@ def obtener_ubicacion(request, camion_id):
 @login_required
 def mostrar_mapa(request):
     if request.user.is_staff:
-        mensajes_predefinidos = MensajePredefinido.objects.all()  # Obtener mensajes predefinidos
-        return render(request, 'mapa.html', {'mensajes_predefinidos': mensajes_predefinidos})
+        mensajes_predefinidos = MensajePredefinido.objects.all()
+        choferes = Chofer.objects.all()  # Obtener todos los choferes
+        print(choferes)  # Para verificar si hay choferes en la consola
+        return render(request, 'mapa.html', {'mensajes_predefinidos': mensajes_predefinidos, 'choferes': choferes})
     else:
         return render(request, 'mapa_chofer.html')
 
@@ -221,6 +223,7 @@ def asignar_camion_automatico(request):
             'mensaje': 'No hay camiones disponibles para asignar en este momento.'
         })
 
+
 @login_required
 def iniciar_viaje(request):
     try:
@@ -232,14 +235,31 @@ def iniciar_viaje(request):
 
         if not asignacion:
             return JsonResponse({'error': 'No hay camión asignado o el viaje ya está en curso'}, status=400)
+        
+        camion = asignacion.camion
+
+        # Extraer latitud y longitud actuales del camión
+        latitud_inicial = camion.latitud
+        longitud_inicial = camion.longitud
+
+        if latitud_inicial is None or longitud_inicial is None:
+            return JsonResponse({'error': 'No se pueden obtener las coordenadas del camión asignado.'}, status=400)
+
 
         # Crear un registro en HistorialViaje
         historial = HistorialViaje.objects.create(
             camion=asignacion.camion,
             chofer=request.user,
             fecha_inicio=now(),
+            latitud_inicial=latitud_inicial,
+            longitud_inicial=longitud_inicial,
             estado="En curso"
         )
+
+        # Enviar mensaje de WhatsApp con las coordenadas iniciales
+        mensaje = f"Inicio de viaje en el camión {camion.nombre}.\nCoordenadas iniciales:\nLatitud: {latitud_inicial}\nLongitud: {longitud_inicial}"
+        chofer = Chofer.objects.get(usuario=request.user)  # Obtener el modelo Chofer relacionado
+        enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, mensaje)
 
         # Actualizar asignación
         asignacion.en_viaje = True
@@ -247,7 +267,7 @@ def iniciar_viaje(request):
 
         return JsonResponse({'status': 'Viaje iniciado', 'fecha_inicio': historial.fecha_inicio})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'error': str(e)}, status=400)  
 
 @login_required
 def finalizar_viaje(request):
@@ -261,6 +281,16 @@ def finalizar_viaje(request):
         if not asignacion:
             return JsonResponse({'error': 'No hay un viaje activo para finalizar'}, status=400)
 
+        camion = asignacion.camion
+
+        # Extraer latitud y longitud actuales del camión
+        latitud_final = camion.latitud
+        longitud_final = camion.longitud
+
+        if latitud_final is None or longitud_final is None:
+            return JsonResponse({'error': 'No se pueden obtener las coordenadas del camión asignado.'}, status=400)
+
+
         # Actualizar el registro de HistorialViaje
         historial = HistorialViaje.objects.filter(
             camion=asignacion.camion, 
@@ -270,9 +300,16 @@ def finalizar_viaje(request):
 
         if historial:
             historial.fecha_fin = now()
+            historial.latitud_final = latitud_final
+            historial.longitud_final = longitud_final
             historial.estado = "Finalizado"
             historial.duracion_total = historial.fecha_fin - historial.fecha_inicio
             historial.save()
+
+        # Enviar mensaje de WhatsApp con las coordenadas finales
+        mensaje = f"Finalización de viaje en el camión {camion.nombre}.\nCoordenadas finales:\nLatitud: {latitud_final}\nLongitud: {longitud_final}\nDuración del viaje: {historial.duracion_formateada}"
+        chofer = Chofer.objects.get(usuario=request.user)
+        enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, mensaje)
 
         # Liberar el camión
         asignacion.en_viaje = False
@@ -282,6 +319,9 @@ def finalizar_viaje(request):
         return JsonResponse({'status': 'Viaje finalizado', 'duracion_total': str(historial.duracion_total)})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+
+
 
 @login_required
 def historial_viajes(request):
@@ -366,6 +406,8 @@ def esta_conectado(self):
 
 
 
+
+
 def estadistica(request):
     # Filtrar por rango de fechas si están presentes
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -379,14 +421,13 @@ def estadistica(request):
             fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d")
             viajes_totales = viajes_totales.filter(fecha_inicio__date__gte=fecha_inicio, fecha_fin__date__lte=fecha_fin)
         except ValueError:
-            # Si el formato de la fecha no es válido, ignorar el filtro
             pass
     else:
         # Si no se proporcionaron fechas, obtener el primer y último día del mes actual
         today = datetime.today()
         fecha_inicio = today.replace(day=1)  # Primer día del mes actual
         next_month = today.replace(day=28) + timedelta(days=4)  # Esto siempre nos da un día en el siguiente mes
-        fecha_fin = next_month - timedelta(days=next_month.day)  # El último día del mes actual
+        fecha_fin = next_month - timedelta(days=next_month.day)  # Último día del mes actual
 
         viajes_totales = viajes_totales.filter(fecha_inicio__date__gte=fecha_inicio, fecha_fin__date__lte=fecha_fin)
 
@@ -418,39 +459,43 @@ def estadistica(request):
         fig_mes = go.Figure(data=[go.Scatter(
             x=meses,
             y=[viajes_por_mes_dict[mes] for mes in meses],
-            mode='lines+markers',  # Puntos conectados por una línea
-            marker=dict(color='#4CAF50', size=8),  # Color y tamaño de los puntos
-            line=dict(color='#4CAF50', width=2),  # Color y grosor de la línea
+            mode='lines+markers',
+            marker=dict(color='#4CAF50', size=8),
+            line=dict(color='#4CAF50', width=2),
             text=[viajes_por_mes_dict[mes] for mes in meses],
-            textposition='top center'  # Mostrar el número de viajes encima de los puntos
+            textposition='top center'
         )])
 
         fig_mes.update_layout(
             title="Cantidad de Viajes por Mes (Últimos 12 meses)",
             width=1750,
             height=300,
-            plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
-            paper_bgcolor='rgba(0,0,0,0)',  # Sin fondo
-            xaxis=dict(showgrid=False),  # Sin líneas de la cuadrícula en el eje x
-            yaxis=dict(showgrid=True),  # Mostrar cuadrícula en el eje y
-            showlegend=False  # Sin leyenda
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=True),
+            showlegend=False
         )
         graph_html_mes = plot(fig_mes, output_type='div')
 
         # Gráfico de viajes por conductor
-        viajes_por_chofer = viajes_totales.values('chofer__username') \
-            .annotate(cantidad_viajes=Count('id'), tiempo_promedio=Avg('duracion_total')) \
-            .order_by('-cantidad_viajes')
+        viajes_por_chofer = viajes_totales.values(
+            'chofer__first_name', 'chofer__last_name'
+        ).annotate(
+            cantidad_viajes=Count('id'),
+            tiempo_promedio=Avg('duracion_total')
+        ).order_by('-cantidad_viajes')
 
         for item in viajes_por_chofer:
+            item['nombre_completo'] = f"{item['chofer__first_name']} {item['chofer__last_name']}"
             if item['tiempo_promedio']:
-                item['tiempo_promedio'] = item['tiempo_promedio'].total_seconds() / 60  # tiempo en minutos
+                item['tiempo_promedio'] = item['tiempo_promedio'].total_seconds() / 60  # Convertir a minutos
             else:
                 item['tiempo_promedio'] = 0
 
         # Crear el gráfico de viajes por conductor
         fig_conductor = go.Figure(data=[go.Bar(
-            x=[item['chofer__username'] for item in viajes_por_chofer],
+            x=[item['nombre_completo'] for item in viajes_por_chofer],
             y=[item['cantidad_viajes'] for item in viajes_por_chofer],
             text=[item['cantidad_viajes'] for item in viajes_por_chofer],
             textposition='auto',
@@ -460,49 +505,44 @@ def estadistica(request):
             title="Viajes por Conductor",
             width=350,
             height=300,
-            plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
-            paper_bgcolor='rgba(0,0,0,0)'  # Sin fondo
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)'
         )
         graph_html_conductor = plot(fig_conductor, output_type='div')
 
         # Obtener las coordenadas de los viajes filtrados para el mapa
         latitudes = []
         longitudes = []
-        textos = []  # Para mostrar información adicional en cada punto del mapa
+        textos = []
 
         for viaje in viajes_totales:
             if viaje.latitud_final and viaje.longitud_final:
                 latitudes.append(viaje.latitud_final)
                 longitudes.append(viaje.longitud_final)
-                textos.append(f"Viaje ID: {viaje.id}, {viaje.chofer.username}")
+                textos.append(f"Viaje ID: {viaje.id}, {viaje.chofer.first_name} {viaje.chofer.last_name}")
 
-        # Verificar si hay coordenadas válidas
         if latitudes:
-            # Crear el gráfico de mapa
             map_fig = go.Figure(go.Scattermapbox(
                 mode='markers',
                 lat=latitudes,
                 lon=longitudes,
-                text=textos,  # Información que se mostrará al pasar el mouse
+                text=textos,
                 marker=dict(size=12, color='#4CAF50'),
             ))
             map_fig.update_layout(
                 mapbox=dict(
                     style="open-street-map",
-                    center=dict(lat=sum(latitudes)/len(latitudes), lon=sum(longitudes)/len(longitudes)),  # Centra el mapa
-                    zoom=10,  # Ajusta el nivel de zoom
+                    center=dict(lat=sum(latitudes)/len(latitudes), lon=sum(longitudes)/len(longitudes)),
+                    zoom=10,
                 ),
-                height=300,  # Ajusta la altura si es necesario
-                width=800,   # Ajusta el ancho si es necesario
-                plot_bgcolor='rgba(0,0,0,0)',  # Sin fondo
-                paper_bgcolor='rgba(0,0,0,0)',  # Sin fondo en el papel
-                margin=dict(l=0, r=0, t=0, b=0),  # Eliminar márgenes
+                height=300,
+                width=800,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                margin=dict(l=0, r=0, t=0, b=0),
             )
             map_html = plot(map_fig, output_type='div')
-        else:
-            map_html = ""  # Si no hay coordenadas, dejar el mapa vacío
 
-        # Contar los choferes "en línea" (con viajes en curso)
         choferes_en_linea = viajes_totales.filter(estado="En curso").values('chofer__username').distinct().count()
 
     context = {
@@ -512,35 +552,57 @@ def estadistica(request):
         'graph_html_mes': graph_html_mes,
         'graph_html_conductor': graph_html_conductor,
         'viajes_por_chofer': viajes_por_chofer,
-        'map_html': map_html,  # El HTML del mapa con los puntos finales de los viajes
-        'sin_viajes': sin_viajes,  # Indicador de que no hay viajes
+        'map_html': map_html,
+        'sin_viajes': sin_viajes,
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
-        'choferes_en_linea': choferes_en_linea,  # Número de choferes en línea
+        'choferes_en_linea': choferes_en_linea,
     }
     return render(request, 'estadistica.html', context)
 
+
+
 @login_required
 @user_passes_test(lambda u: u.is_staff)
-def enviar_mensaje_predefinido(request, mensaje_id):
-    """
-    Envía un mensaje predefinido a todos los choferes.
-    """
-    try:
-        mensaje = MensajePredefinido.objects.get(id=mensaje_id)
-        choferes = Chofer.objects.filter(telefono__isnull=False, api_key__isnull=False)
+def enviar_mensaje_predefinido(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            mensaje_id = data.get("mensaje_id")
+            mensaje_personalizado = data.get("mensaje_personalizado", "").strip()
+            chofer_ids = data.get("chofer_ids", [])
 
-        resultados = []
-        for chofer in choferes:
-            cuerpo_personalizado = mensaje.cuerpo.replace("[NOMBRE_CHOFER]", chofer.usuario.username)
-            exito = enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, cuerpo_personalizado)
-            resultados.append({
-                "chofer": chofer.usuario.username,
-                "numero": chofer.telefono,
-                "resultado": "Éxito" if exito else "Fallo"
-            })
+            # Validar mensaje
+            if not mensaje_id and not mensaje_personalizado:
+                return JsonResponse({"status": "error", "mensaje": "Debes proporcionar un mensaje válido."})
 
-        return JsonResponse({"status": "completado", "detalles": resultados})
+            # Usar mensaje personalizado si no hay un mensaje predefinido seleccionado
+            mensaje_cuerpo = ""
+            if mensaje_id:
+                try:
+                    mensaje = MensajePredefinido.objects.get(id=mensaje_id)
+                    mensaje_cuerpo = mensaje.cuerpo
+                except MensajePredefinido.DoesNotExist:
+                    return JsonResponse({"status": "error", "mensaje": "El mensaje predefinido seleccionado no existe."})
+            elif mensaje_personalizado:
+                mensaje_cuerpo = mensaje_personalizado
 
-    except MensajePredefinido.DoesNotExist:
-        return JsonResponse({"status": "error", "mensaje": "El mensaje seleccionado no existe."})
+            # Filtrar choferes seleccionados
+            choferes = Chofer.objects.filter(id__in=chofer_ids, telefono__isnull=False, api_key__isnull=False)
+
+            resultados = []
+            for chofer in choferes:
+                cuerpo_personalizado = mensaje_cuerpo.replace("[NOMBRE_CHOFER]", chofer.usuario.username)
+                exito = enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, cuerpo_personalizado)
+                resultados.append({
+                    "chofer": chofer.usuario.username,
+                    "numero": chofer.telefono,
+                    "resultado": "Éxito" if exito else "Fallo"
+                })
+
+            return JsonResponse({"status": "completado", "detalles": resultados})
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "mensaje": str(e)})
+
+    return JsonResponse({"status": "error", "mensaje": "Método no permitido."}, status=405)

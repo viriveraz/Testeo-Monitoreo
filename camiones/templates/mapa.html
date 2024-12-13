@@ -8,10 +8,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'css/monitoreo2.css' %}">
     <link rel="stylesheet" href="{% static 'css/boton.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modalReporte.css' %}">
 </head>
 <body>
-
-    <!-- Cambiar la clase inicial a 'menu-lateral closed' -->
     <div class="menu-lateral closed" id="menu-lateral">
         <h2>Menú</h2>
         <ul>
@@ -23,15 +22,16 @@
         <hr>
         <div class="usuario-info">
             <p>Conectado como:</p>
-            <strong>{{ user.first_name }} {{ user.last_name }}</strong><!-- Django context variable -->
-        </div>  
+            <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+        </div>
         <div class="logout">
             <form method="POST" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button type="submit" class="btn-logout">Cerrar Sesión</button>
             </form>
-        </div>      
+        </div>
     </div>
+
     <div id="map"></div>
 
     <button id="btn-centrar">
@@ -44,13 +44,60 @@
             <span>Geolocalización</span>
         </div>
 
-        <!-- Nuevo botón desplegable para enviar mensajes -->
-        <div class="dropdown">
-            <button class="dropdown-toggle" id="dropdown-button">Enviar Mensaje</button>
-            <div class="dropdown-menu" id="dropdown-menu">
-                {% for mensaje in mensajes_predefinidos %}
-                    <button onclick="enviarMensaje('{{ mensaje.id }}')">{{ mensaje.titulo }}</button>
-                {% endfor %}
+        <button id="btn-enviar-reporte" onclick="abrirModal()">Enviar Reporte</button>
+
+        <!-- Modal de Reporte -->
+        <div id="modal-reporte" class="modal-reporte">
+            <div class="modal-reporte-contenido">
+                <span class="cerrar-reporte" onclick="cerrarModal()">&times;</span>
+                <h3>Enviar Mensaje Predefinido</h3>
+
+                <!-- Sección de mensaje -->
+                <div class="modal-seccion">
+                    <button class="modal-titulo">Mensaje</button>
+                    <div class="modal-seccion-contenido">
+                        <label for="mensaje">Selecciona un mensaje:</label>
+                        <select id="mensaje" onchange="mostrarCampoTexto()">
+                            <option value="">Selecciona un mensaje...</option>
+                            {% for mensaje in mensajes_predefinidos %}
+                            <option value="{{ mensaje.id }}">{{ mensaje.titulo }}</option>
+                            {% endfor %}
+                            <option value="personalizado" class="opcion-personalizada">Mensaje Personalizado</option>
+                        </select>
+                        <div id="campo-personalizado" style="display: none; margin-top: 10px;">
+                            <label for="mensaje-personalizado">Escribe tu mensaje personalizado:</label>
+                            <textarea id="mensaje-personalizado" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <!-- Sección de selección de chofer -->
+                <div class="modal-seccion">
+                    <button class="modal-titulo">Selección De Choferes</button>
+                    <div class="modal-seccion-contenido">
+                        <!-- Botón de "Seleccionar Todos" -->
+                        <div style="margin-bottom: 10px; text-align: center;">
+                            <button id="boton-seleccionar-todos" class="btn-seleccionar-todos" onclick="toggleSeleccionarTodos()">Seleccionar Todos</button>
+                        </div>
+                        
+                        <div id="choferes-form">
+                            {% for chofer in choferes %}
+                            <div class="chofer-checkbox">
+                                <label>
+                                    <input type="checkbox" name="chofer" value="{{ chofer.id }}">
+                                    {{ chofer.usuario.first_name }} {{ chofer.usuario.last_name }} ({{ chofer.usuario.username }})
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p>No hay choferes disponibles.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <button class="modal-boton-enviar" onclick="enviarMensajes()">Enviar Mensajes</button>
             </div>
         </div>
     </div>
@@ -59,7 +106,7 @@
     <script src="{% static 'js/geolocalizacion.js' %}"></script>
 
     <script>
-
+        
         // Centrar el mapa en la ubicación actual
         document.getElementById('btn-centrar').addEventListener('click', function () {
             if (navigator.geolocation) {
@@ -70,22 +117,125 @@
                 });
             }
         });
+        
+        function mostrarCampoTexto() {
+            const mensajeSelect = document.getElementById("mensaje");
+            const campoPersonalizado = document.getElementById("campo-personalizado");
+            campoPersonalizado.style.display = mensajeSelect.value === "personalizado" ? "block" : "none";
 
-        function enviarMensaje(mensajeId) {
-                fetch("{% url 'enviar_mensaje_predefinido' 0 %}".replace('0', mensajeId), {
-                    method: 'GET',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "completado") {
-                        alert("Mensajes enviados con éxito.");
-                    } else {
-                        alert("Error al enviar mensajes: " + data.mensaje);
+            // Mostrar el campo si se selecciona "Mensaje Personalizado"
+            if (mensajeSelect.value === "personalizado") {
+                campoPersonalizado.style.display = "block";
+            } else {
+                campoPersonalizado.style.display = "none";
+            }
+        }
+
+        // Funciones para abrir y cerrar el modal
+        function abrirModal() {
+            const modal = document.getElementById("modal-reporte");
+            modal.style.display = "block";
+
+            // Reiniciar el formulario al abrir el modal
+            const mensajeSelect = document.getElementById("mensaje");
+            const campoPersonalizado = document.getElementById("campo-personalizado");
+            const textoPersonalizado = document.getElementById("mensaje-personalizado");
+
+            mensajeSelect.value = ""; // Reiniciar selección del menú desplegable
+            textoPersonalizado.value = ""; // Limpiar el campo de texto personalizado
+            campoPersonalizado.style.display = "none"; // Ocultar el campo de texto personalizado
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById("modal-reporte");
+            modal.style.display = "none";
+        }
+
+        function toggleSeleccionarTodos() {
+            const boton = document.getElementById("boton-seleccionar-todos");
+            const checkboxes = document.querySelectorAll("#choferes-form input[type='checkbox']");
+            const seleccionarTodos = boton.innerText === "Seleccionar Todos";
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = seleccionarTodos;
+            });
+
+            boton.innerText = seleccionarTodos ? "Deseleccionar Todos" : "Seleccionar Todos";
+        }
+
+        // Asegúrate de que si se desmarca un checkbox individual, "Seleccionar Todos" se desmarque también
+        document.addEventListener("DOMContentLoaded", function () {
+            const seleccionarTodosCheckbox = document.getElementById("seleccionar-todos");
+            const choferCheckboxes = document.querySelectorAll("#choferes-form .chofer-checkbox");
+
+            choferCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener("change", function () {
+                    if (!checkbox.checked) {
+                        seleccionarTodosCheckbox.checked = false;
+                    } else if (Array.from(choferCheckboxes).every(checkbox => checkbox.checked)) {
+                        seleccionarTodosCheckbox.checked = true;
                     }
-                })
-                .catch(error => console.error("Error:", error));
+                });
+            });
+        });
+        // Asegurar que el evento siempre está conectado
+        document.addEventListener("DOMContentLoaded", function () {
+            const mensajeSelect = document.getElementById("mensaje");
+            mensajeSelect.addEventListener("change", mostrarCampoTexto);
+        });
+
+        // Asegurarse de que el modal está cerrado al cargar la página
+        document.addEventListener("DOMContentLoaded", function () {
+            cerrarModal();
+        });
+
+        document.getElementById("mensaje").addEventListener("focus", function() {
+            const defaultOption = this.querySelector('option[value=""]');
+            if (defaultOption) {
+                defaultOption.remove(); // Eliminar la opción "Selecciona un mensaje..."
+            }
+        });
+
+
+        // Enviar mensajes
+        function enviarMensajes() {
+            const mensajeSeleccionado = document.getElementById("mensaje").value;
+            const mensajePersonalizado = document.getElementById("mensaje-personalizado").value.trim();
+            const checkboxes = document.querySelectorAll("#choferes-form input[name='chofer']:checked");
+            const choferIds = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+            // Si el usuario selecciona "Mensaje Personalizado", enviar un mensaje_id vacío
+            const mensajeId = mensajeSeleccionado === "personalizado" ? null : mensajeSeleccionado;
+
+            if (!mensajeId && !mensajePersonalizado) {
+                alert("Debes seleccionar un mensaje predefinido o escribir un mensaje personalizado.");
+                return;
             }
 
+            fetch("{% url 'enviar_mensaje_predefinido' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify({
+                    mensaje_id: mensajeId,
+                    mensaje_personalizado: mensajePersonalizado,
+                    chofer_ids: choferIds,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "completado") {
+                    alert("Mensajes enviados exitosamente.");
+                    resetearFormulario();
+                    cerrarModal();
+                } else {
+                    alert("Error al enviar mensajes: " + data.mensaje);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
         document.addEventListener('DOMContentLoaded', function () {
             const dropdownButton = document.getElementById('dropdown-button');
             const dropdownMenu = document.getElementById('dropdown-menu');
@@ -105,6 +255,20 @@
                 dropdownMenu.style.display = 'none';
             });
         });
+        function resetearFormulario() {
+            // Limpiar el mensaje seleccionado
+            document.getElementById("mensaje").value = "";
+
+            // Ocultar el campo de texto personalizado
+            const campoTexto = document.getElementById("mensaje-personalizado");
+            campoTexto.style.display = "none";
+            campoTexto.value = "";
+
+            // Desmarcar todos los checkboxes
+            const checkboxes = document.querySelectorAll("#choferes-form input[name='chofer']");
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+        }
+
     </script>
 </body>
 </html>

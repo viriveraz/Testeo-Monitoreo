@@ -1,0 +1,182 @@
+/* Estilos para el modal de reporte */
+.modal-reporte {
+    display: none; /* Inicialmente cerrado */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-reporte[style*="display: block"] {
+    opacity: 1;
+}
+
+.modal-reporte-contenido {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 800px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-family: 'Roboto', Arial, sans-serif; /* Fuente global */
+    font-size: 14px; /* Tamaño base */
+    color: #333; /* Color del texto */
+    line-height: 1.6; /* Espaciado entre líneas */
+    position: relative; /* Necesario para la posición del botón de cierre */
+}
+
+/* Botón de cerrar */
+.cerrar-reporte {
+    color: #ff0000;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.cerrar-reporte:hover {
+    color: #ff4d4d;
+}
+
+/* Secciones dentro del modal */
+.modal-seccion {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px; /* Espaciado entre secciones */
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 95%;
+    margin: 0 auto; /* Centrado */
+}
+
+.modal-titulo {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    text-align: center;
+    font-size: 16px; /* Ajustado para consistencia */
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.modal-seccion-contenido {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    text-align: left;
+}
+
+/* Ajuste del contenido del mensaje */
+.modal-reporte-contenido select,
+.modal-reporte-contenido textarea {
+    width: 100%; /* Aumenta el ancho al 100% */
+    margin: 10px 0; /* Espaciado uniforme */
+    padding: 12px;
+    font-family: inherit; /* Consistencia con el texto global */
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Botón de enviar */
+.modal-boton-enviar {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-family: inherit; /* Uniformidad en el texto del botón */
+    font-size: 16px;
+    font-weight: 500; /* Un poco más grueso para resaltar */
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 30px auto 0 auto; /* Espaciado adicional */
+    width: 50%;
+}
+
+.modal-boton-enviar:hover {
+    background-color: #218838;
+}
+
+/* Estilo para los choferes */
+.chofer-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaciado entre el checkbox y el texto */
+    margin-bottom: 10px;
+}
+
+.chofer-checkbox input[type="checkbox"] {
+    appearance: none; /* Eliminar estilo por defecto */
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid #28a745; /* Borde más delgado */
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+/* Cuando está seleccionado */
+.chofer-checkbox input[type="checkbox"]:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='white' d='M6.173 12.073l-3.99-4a.708.708 0 011-.996l3.025 3.026 7.024-7.023a.708.708 0 011 1l-8.035 8.035a.708.708 0 01-1.025-.042z'/%3E%3C/svg%3E");
+    background-size: 10px 10px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Hover */
+.chofer-checkbox input[type="checkbox"]:hover {
+    border-color: #218838;
+}
+
+/* Estilo del texto */
+.chofer-checkbox label {
+    font-family: inherit;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    font-weight: 400; /* Peso normal */
+    white-space: nowrap;
+}
+
+.opcion-personalizada {
+    font-weight: bold;
+    color: #007BFF;
+    background-color: #f0f8ff;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .modal-reporte-contenido {
+        width: 90%;
+    }
+
+    .modal-seccion {
+        width: 100%;
+    }
+
+    .modal-boton-enviar {
+        width: 70%;
+    }
+}

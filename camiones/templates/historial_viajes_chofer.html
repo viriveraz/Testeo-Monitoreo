@@ -7,11 +7,48 @@
     <link rel="stylesheet" href="{% static 'css/historial.css' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Viajes</title>
+    <title>Historial de Viajes</title> 
+    <style>
+        .btn-volver {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px; /* Espaciado debajo del botón */
+        }
+
+        .btn-volver:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-volver i {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .btn-volver a {
+            color: inherit;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Menú lateral -->
-    <button><a href="{% url 'mostrar_mapa' %}">Volver</a></button>
+    <button class="btn-volver">
+        <a href="{% url 'mostrar_mapa' %}">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </button>
 
     <div class="container">
         <h2>Historial de Viajes</h2>
