@@ -87,16 +87,21 @@ class MensajePredefinido(models.Model):
 from django.db import models
 from django.utils import timezone
 
+from django.db import models
+from django.utils import timezone
+
+class Estado(models.Model):
+    nombre = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
 class Viaje(models.Model):
     id = models.AutoField(primary_key=True)
     fecha_viaje = models.DateTimeField(default=timezone.now)
     origen = models.CharField(max_length=255)
     patente = models.CharField(max_length=20)
-    estado = models.CharField(max_length=50, choices=[
-        ('pendiente', 'Pendiente'),
-        ('en curso', 'En Curso'),
-        ('finalizado', 'Finalizado')
-    ], default='pendiente')
+    estado = models.ForeignKey(Estado, on_delete=models.SET_NULL, null=True)
     transporte = models.CharField(max_length=255)
     producto = models.CharField(max_length=255)
     fecha_llegada = models.DateTimeField(null=True, blank=True)
@@ -125,4 +130,3 @@ class Viaje(models.Model):
 
         if self.longitud_final and not -180 <= self.longitud_final <= 180:
             raise ValidationError("La longitud final debe estar entre -180 y 180.")
-
