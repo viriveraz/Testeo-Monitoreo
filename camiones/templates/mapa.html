@@ -43,7 +43,7 @@
         <button id="btn-enviar-reporte" onclick="abrirModal()">Enviar Reporte</button>
 
         <!-- Modal de Reporte -->
-        <div id="modal-reporte" class="modal-reporte">
+        <div id="modal-reporte" class="modal-reporte" style="display: none;">
             <div class="modal-reporte-contenido">
                 <span class="cerrar-reporte" onclick="cerrarModal()">&times;</span>
                 <h3>Enviar Mensaje Predefinido</h3>
@@ -110,30 +110,43 @@
 
         var markers = {};
 
+        // Crear un ícono más grande
+        var largeIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/128/71/71222.png', // URL del icono
+            iconSize: [60, 60], // Tamaño del icono
+            iconAnchor: [25, 50], // Punto del icono que se posiciona en el mapa
+            popupAnchor: [0, -50] // Punto desde el cual se abre el popup
+        });
+
         // Función para actualizar ubicaciones
         function actualizarUbicaciones() {
             fetch('/camiones/obtener_ubicaciones/')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Datos recibidos:', data);
-                    data.dispositivos.forEach(function (dispositivo) {
-                        const { nombre, latitud, longitud } = dispositivo;
-                        if (markers[nombre]) {
-                            markers[nombre].setLatLng([latitud, longitud]).update();
+                    console.log("Datos recibidos:", data); // Verifica los datos en la consola
+                    data.dispositivos.forEach(function(dispositivo) {
+                        var lat = dispositivo.latitud;
+                        var lon = dispositivo.longitud;
+                        var nombreCamion = dispositivo.nombre;
+                        var nombreChofer = dispositivo.chofer; // Nombre del chofer
+
+                        if (markers[nombreCamion]) {
+                            // Si el marcador ya existe, actualiza su posición
+                            markers[nombreCamion].setLatLng([lat, lon]).update();
                         } else {
-                            markers[nombre] = L.marker([latitud, longitud]).addTo(map)
-                                .bindPopup(nombre);
+                            // Si no existe, crea un nuevo marcador
+                            markers[nombreCamion] = L.marker([lat, lon], { icon: largeIcon }).addTo(map)
+                                .bindPopup(`
+                                    <div>
+                                        <strong>Camión:</strong> ${nombreCamion}<br>
+                                        <strong>Chofer:</strong> ${nombreChofer}
+                                    </div>
+                                `);
                         }
                     });
                 })
                 .catch(error => console.error('Error al obtener ubicaciones:', error));
         }
-
 
         // Actualización periódica de las ubicaciones
         setInterval(actualizarUbicaciones, 5000);
@@ -170,51 +183,13 @@
             boton.innerText = seleccionarTodos ? "Deseleccionar Todos" : "Seleccionar Todos";
         }
 
-        // Asegúrate de que si se desmarca un checkbox individual, "Seleccionar Todos" se desmarque también
-        document.addEventListener("DOMContentLoaded", function () {
-            const seleccionarTodosCheckbox = document.getElementById("seleccionar-todos");
-            const choferCheckboxes = document.querySelectorAll("#choferes-form .chofer-checkbox");
-
-            choferCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener("change", function () {
-                    if (!checkbox.checked) {
-                        seleccionarTodosCheckbox.checked = false;
-                    } else if (Array.from(choferCheckboxes).every(checkbox => checkbox.checked)) {
-                        seleccionarTodosCheckbox.checked = true;
-                    }
-                });
-            });
-        });
-        // Asegurar que el evento siempre está conectado
-        document.addEventListener("DOMContentLoaded", function () {
-            const mensajeSelect = document.getElementById("mensaje");
-            mensajeSelect.addEventListener("change", mostrarCampoTexto);
-        });
-
-        // Asegurarse de que el modal está cerrado al cargar la página
-        document.addEventListener("DOMContentLoaded", function () {
-            cerrarModal();
-        });
-
-        document.getElementById("mensaje").addEventListener("focus", function() {
-            const defaultOption = this.querySelector('option[value=""]');
-            if (defaultOption) {
-                defaultOption.remove(); // Eliminar la opción "Selecciona un mensaje..."
-            }
-        });
-
+        // Función para mostrar el campo de texto personalizado
         function mostrarCampoTexto() {
             const mensajeSelect = document.getElementById("mensaje");
             const campoPersonalizado = document.getElementById("campo-personalizado");
             campoPersonalizado.style.display = mensajeSelect.value === "personalizado" ? "block" : "none";
-
-            // Mostrar el campo si se selecciona "Mensaje Personalizado"
-            if (mensajeSelect.value === "personalizado") {
-                campoPersonalizado.style.display = "block";
-            } else {
-                campoPersonalizado.style.display = "none";
-            }
         }
+
         // Enviar mensajes
         function enviarMensajes() {
             const mensajeSeleccionado = document.getElementById("mensaje").value;
@@ -222,7 +197,6 @@
             const checkboxes = document.querySelectorAll("#choferes-form input[name='chofer']:checked");
             const choferIds = Array.from(checkboxes).map(checkbox => checkbox.value);
 
-            // Si el usuario selecciona "Mensaje Personalizado", enviar un mensaje_id vacío
             const mensajeId = mensajeSeleccionado === "personalizado" ? null : mensajeSeleccionado;
 
             if (!mensajeId && !mensajePersonalizado) {
@@ -254,35 +228,12 @@
             })
             .catch(error => console.error("Error:", error));
         }
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownButton = document.getElementById('dropdown-button');
-            const dropdownMenu = document.getElementById('dropdown-menu');
 
-            // Asegúrate de que el menú está cerrado al cargar la página
-            dropdownMenu.style.display = 'none';
-
-            // Alternar visibilidad del menú al hacer clic en el botón
-            dropdownButton.addEventListener('click', function (e) {
-                e.stopPropagation(); // Evita que el clic cierre inmediatamente el menú
-                const isMenuVisible = dropdownMenu.style.display === 'block';
-                dropdownMenu.style.display = isMenuVisible ? 'none' : 'block';
-            });
-
-            // Cerrar el menú si se hace clic fuera de él
-            document.addEventListener('click', function () {
-                dropdownMenu.style.display = 'none';
-            });
-        });
         function resetearFormulario() {
-            // Limpiar el mensaje seleccionado
             document.getElementById("mensaje").value = "";
-
-            // Ocultar el campo de texto personalizado
             const campoTexto = document.getElementById("mensaje-personalizado");
             campoTexto.style.display = "none";
             campoTexto.value = "";
-
-            // Desmarcar todos los checkboxes
             const checkboxes = document.querySelectorAll("#choferes-form input[name='chofer']");
             checkboxes.forEach(checkbox => checkbox.checked = false);
         }

@@ -1,0 +1,376 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+}
+
+/* Formulario de filtros */
+form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+form input,
+form select,
+form button {
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+form button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+/* Tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+}
+
+table th{
+ 
+    color: #28a745;
+}
+
+
+/* Estados */
+.estado-finalizado,
+.estado-en-curso {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 25px;
+    padding: 0;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    box-sizing: border-box;
+}
+
+.estado-finalizado {
+    background-color: #28a745;
+}
+
+.estado-finalizado:hover {
+    background-color: #218838;
+}
+
+.estado-en-curso {
+    background-color: #ffc107;
+}
+
+.estado-en-curso:hover {
+    background-color: #e0a800;
+}
+
+/* Contenedor que centra el botón */
+.exportar-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Botón de Exportar a Excel */
+.btn-exportar-excel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #28a745;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 20px auto;
+}
+
+.btn-exportar-excel:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+    text-decoration: none;
+}
+
+.btn-exportar-excel i {
+    margin-right: 8px;
+}
+
+/* Botón de Eliminar centrado */
+table td .btn-danger {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 12px;
+    margin: auto;
+    border: none;
+    border-radius: 5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: fit-content;
+}
+
+table td .btn-danger:hover {
+    background-color: #c82333;
+    transform: scale(1.05);
+}
+
+table td .btn-danger i {
+    margin-right: 8px;
+}
+
+table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px;
+    background-color: transparent;
+}
+
+table td form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+/* Paginación */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.pagination a,
+.pagination span {
+    margin: 0 5px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.pagination a:hover {
+    background-color: #e9ecef;
+}
+
+/* Estilo para el mensaje cuando no hay registros */
+.no-results {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #555;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 15px 20px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Formulario de filtros */
+form {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    gap: 20px;
+}
+
+form label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #555;
+    white-space: nowrap;
+    margin-right: 8px;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+form input[type="date"],
+form select {
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    color: #555;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+    min-width: 150px;
+}
+
+form input[type="date"]:focus,
+form select:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+form button {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+form button:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+form > * {
+    flex: 1;
+    max-width: 250px;
+}
+
+/* Estilo para el contenedor de los mensajes de advertencia */
+.message {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+    margin: 20px 0;
+}
+
+/* Estilo para los gráficos y mapa */
+.barras {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: stretch;
+    width: 100%;
+    padding-left: 30PX;
+}
+
+.barras > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+     padding-left: 30PX;
+}
+
+
+
+.mapa{
+
+    margin-right: 70px;
+}
+
+
+
+.barras > div > * {
+    flex-grow: 1;
+}
+
+.barras div p {
+    font-size: 18px;
+    color: #ff5733;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    font-size: 1.2em;
+    color: #888;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f4f4f4;
+}
