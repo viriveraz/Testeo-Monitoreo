@@ -120,24 +120,19 @@ def dispositivos_chofer_view(request):
 
 @login_required
 def obtener_ubicaciones(request):
-    # Filtrar camiones con asignaciones activas y última actualización reciente
+
     dispositivos_conectados = Camion.objects.filter(
-        ultima_actualizacion__gte=timezone.now() - timezone.timedelta(minutes=5)
-    ).prefetch_related('asignacionchofer_set')
+        ultima_actualizacion__gte=now() - timedelta(seconds=5)
+    )
 
-    data = []
-    for dispositivo in dispositivos_conectados:
-        # Obtener el chofer asignado
-        asignacion = dispositivo.asignacionchofer_set.filter(fecha_fin__isnull=True).first()
-        chofer_nombre = f"{asignacion.chofer.first_name} {asignacion.chofer.last_name}" if asignacion else "Sin chofer"
-
-        # Agregar datos del camión y el chofer
-        data.append({
+    data = [
+        {
             'nombre': dispositivo.nombre,
-            'chofer': chofer_nombre,
             'latitud': dispositivo.latitud,
             'longitud': dispositivo.longitud
-        })
+        }
+        for dispositivo in dispositivos_conectados
+    ]
 
     return JsonResponse({'dispositivos': data})
 
@@ -760,3 +755,17 @@ def enviar_mensaje_predefinido(request):
             return JsonResponse({"status": "error", "mensaje": str(e)})
 
     return JsonResponse({"status": "error", "mensaje": "Método no permitido."}, status=405)
+
+@login_required
+def ver_ruta_viaje(request, viaje_id):
+    viaje = get_object_or_404(HistorialViaje, id=viaje_id)
+
+    context = {
+        'lat_inicio': viaje.latitud_inicial,
+        'lon_inicio': viaje.longitud_inicial,
+        'lat_fin': viaje.latitud_final,
+        'lon_fin': viaje.longitud_final,
+        'camion': viaje.camion.nombre,
+        'chofer': f"{viaje.chofer.first_name} {viaje.chofer.last_name}"
+    }
+    return render(request, 'ruta_viaje.html', context)

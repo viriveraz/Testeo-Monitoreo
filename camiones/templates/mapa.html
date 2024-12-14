@@ -113,33 +113,26 @@
         // Función para actualizar ubicaciones
         function actualizarUbicaciones() {
             fetch('/camiones/obtener_ubicaciones/')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    console.log("Datos recibidos:", data); // Verifica los datos en la consola
-                    data.dispositivos.forEach(function(dispositivo) {
-                        var lat = dispositivo.latitud;
-                        var lon = dispositivo.longitud;
-                        var nombreCamion = dispositivo.nombre;
-                        var nombreChofer = dispositivo.chofer; // Nombre del chofer
-
-                        if (markers[nombreCamion]) {
-                            // Si el marcador ya existe, actualiza su posición
-                            markers[nombreCamion].setLatLng([lat, lon]).update();
+                    console.log('Datos recibidos:', data);
+                    data.dispositivos.forEach(function (dispositivo) {
+                        const { nombre, latitud, longitud } = dispositivo;
+                        if (markers[nombre]) {
+                            markers[nombre].setLatLng([latitud, longitud]).update();
                         } else {
-                            // Si no existe, crea un nuevo marcador
-                            markers[nombreCamion] = L.marker([lat, lon]).addTo(map)
-                                .bindPopup(`
-                                    <div>
-                                        <strong>Camión:</strong> ${nombreCamion}<br>
-                                        <strong>Chofer:</strong> ${nombreChofer}
-                                    </div>
-                                `);
+                            markers[nombre] = L.marker([latitud, longitud]).addTo(map)
+                                .bindPopup(nombre);
                         }
                     });
                 })
                 .catch(error => console.error('Error al obtener ubicaciones:', error));
         }
-
 
 
         // Actualización periódica de las ubicaciones

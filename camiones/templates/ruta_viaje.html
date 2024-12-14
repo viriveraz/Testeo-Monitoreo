@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta del Viaje</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    <style>
+        #mapa {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Ruta del Viaje</h2>
+    <p><strong>Camión:</strong> {{ camion }}</p>
+    <p><strong>Conductor:</strong> {{ chofer }}</p>
+
+    <div id="mapa"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+    <script>
+        const latInicio = {{ lat_inicio }};
+        const lonInicio = {{ lon_inicio }};
+        const latFin = {{ lat_fin }};
+        const lonFin = {{ lon_fin }};
+    
+        const map = L.map('mapa').setView([latInicio, lonInicio], 13);
+    
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Personalizar estilo de la línea de la ruta
+        L.Routing.control({
+            waypoints: [
+                L.latLng(latInicio, lonInicio),
+                L.latLng(latFin, lonFin)
+            ],
+            routeWhileDragging: false,
+            showAlternatives: false,
+            createMarker: function (i, waypoint, n) {
+                return L.marker(waypoint.latLng).bindPopup(i === 0 ? "Inicio del viaje" : "Fin del viaje");
+            },
+            lineOptions: {
+                styles: [
+                    {
+                        color: 'black', // Cambia esto a 'black' si prefieres negro
+                        opacity: 0.8,
+                        weight: 6 // Grosor de la línea
+                    }
+                ]
+            },
+            router: L.Routing.osrmv1({
+                language: 'es', // Idioma en español
+                profile: 'car'  // Modo de transporte (carro en este caso)
+            })
+        }).addTo(map);
+    </script>    
+</body>
+</html>

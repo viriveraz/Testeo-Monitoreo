@@ -39,4 +39,6 @@ urlpatterns = [
     path('obtener-camiones-disponibles/', views.obtener_camiones_disponibles, name='obtener_camiones_disponibles'),
     path('asignar-camion/', views.asignar_camion, name='asignar_camion'),
 
+    path('viajes/<int:viaje_id>/ruta/', views.ver_ruta_viaje, name='ver_ruta_viaje'),
+
 ]
