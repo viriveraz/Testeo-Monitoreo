@@ -26,6 +26,18 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from camiones.utils import enviar_mensaje_whatsapp
 
+@login_required
+def obtener_camiones_disponibles(request):
+    if request.method == 'GET':
+        camiones = Camion.objects.filter(
+            estado='Disponible'
+        ).exclude(
+            asignacionchofer__en_viaje=True
+        )
+        data = [{'id': camion.id, 'nombre': camion.nombre, 'patente': camion.patente} for camion in camiones]
+        return JsonResponse({'camiones': data})
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 # Obtener ubicación del camión
 def obtener_ubicacion(request, camion_id):
     try:
@@ -109,7 +121,7 @@ def dispositivos_chofer_view(request):
 @login_required
 def obtener_ubicaciones(request):
     dispositivos_conectados = Camion.objects.filter(
-        ultima_actualizacion__gte=timezone.now() - timezone.timedelta(minutes=5)
+        ultima_actualizacion__gte=timezone.now() - timezone.timedelta(seconds=5)
     )
     data = [{'latitud': dispositivo.latitud, 'longitud': dispositivo.longitud} for dispositivo in dispositivos_conectados]
     return JsonResponse({'dispositivos': data})
@@ -173,8 +185,6 @@ def camiones_list(request):
     camiones = Camion.objects.all()
     return render(request, 'camiones_list.html', {'camiones': camiones})
 
-
-
 def camion_create(request):
     if request.method == 'POST':
         form = CamionForm(request.POST)
@@ -194,6 +204,9 @@ def camion_update(request, id):
         form = CamionForm(request.POST, instance=camion)
         if form.is_valid():
             form.save()
+            # Envío de mensaje de éxito
+            messages.success(request, '¡Camión actualizado con éxito!')
+            # Redirigimos a la lista de camiones, donde se mostrará el modal
             return redirect('camiones_list')
     else:
         form = CamionForm(instance=camion)
@@ -208,35 +221,81 @@ def camion_delete(request, id):
     return render(request, 'camion_confirm_delete.html', {'camion': camion})
 
 @login_required
-def asignar_camion_automatico(request):
-    chofer = request.user
-    # Buscar el primer camión disponible (sin chofer asignado actualmente)
-    camion_disponible = Camion.objects.filter(choferes_asignados__isnull=True).first()
-    
-    if camion_disponible:
-        # Asignar el camión al chofer
-        AsignacionChofer.objects.create(chofer=chofer, camion=camion_disponible, fecha_inicio=timezone.now())
-        return redirect('vista_conductor')  # Redirige a la vista de monitoreo del chofer
-    else:
-        # Si no hay camiones disponibles, renderiza la página no_camion_disponible
-        return render(request, 'no_camion_disponible.html', {
-            'mensaje': 'No hay camiones disponibles para asignar en este momento.'
-        })
+def asignar_camion(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            camion_id = data.get('camion_id')
+
+            if not camion_id:
+                return JsonResponse({'error': 'ID del camión no proporcionado'}, status=400)
+
+            camion = Camion.objects.get(id=camion_id, estado='Disponible')
+            AsignacionChofer.objects.create(
+                chofer=request.user,
+                camion=camion,
+                fecha_inicio=now()
+            )
+            return JsonResponse({'status': f"Camión {camion.nombre} asignado exitosamente."})
+
+        except Camion.DoesNotExist:
+            return JsonResponse({'error': 'El camión no está disponible.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
 @login_required
 def iniciar_viaje(request):
     try:
-        asignacion = AsignacionChofer.objects.filter(
-            chofer=request.user, 
-            fecha_fin__isnull=True, 
-            en_viaje=False
-        ).order_by('-fecha_inicio').first()
+        # Obtener datos del request (camion_id proporcionado desde el frontend)
+        data = json.loads(request.body)
+        camion_id = data.get('camion_id')
 
+        if not camion_id:
+            return JsonResponse({'error': 'No se proporcionó un camión.'}, status=400)
+
+        # Verificar si el chofer ya tiene un viaje activo
+        viaje_chofer_activo = HistorialViaje.objects.filter(
+            chofer=request.user,
+            estado="En curso"
+        ).exists()
+
+        if viaje_chofer_activo:
+            return JsonResponse({'error': 'Ya tienes un viaje activo. Finaliza tu viaje antes de iniciar uno nuevo.'}, status=400)
+
+        # Verificar si el camión ya tiene un viaje en curso
+        viaje_camion_activo = HistorialViaje.objects.filter(
+            camion_id=camion_id,
+            estado="En curso"
+        ).exists()
+
+        if viaje_camion_activo:
+            return JsonResponse({'error': 'El camión ya tiene un viaje en curso.'}, status=400)
+
+        # Verificar si el camión está disponible
+        camion = Camion.objects.filter(id=camion_id, estado='Disponible').first()
+        if not camion:
+            return JsonResponse({'error': 'El camión no está disponible o ya está asignado.'}, status=400)
+
+        # Verificar si ya existe una asignación activa para el usuario
+        asignacion = AsignacionChofer.objects.filter(
+            chofer=request.user,
+            fecha_fin__isnull=True,
+            en_viaje=False
+        ).first()
+
+        if asignacion and asignacion.camion.id != camion.id:
+            return JsonResponse({'error': 'Ya tienes una asignación activa con otro camión.'}, status=400)
+
+        # Si no existe una asignación previa, crear una nueva
         if not asignacion:
-            return JsonResponse({'error': 'No hay camión asignado o el viaje ya está en curso'}, status=400)
-        
-        camion = asignacion.camion
+            asignacion = AsignacionChofer.objects.create(
+                chofer=request.user,
+                camion=camion,
+                fecha_inicio=now()
+            )
 
         # Extraer latitud y longitud actuales del camión
         latitud_inicial = camion.latitud
@@ -245,10 +304,9 @@ def iniciar_viaje(request):
         if latitud_inicial is None or longitud_inicial is None:
             return JsonResponse({'error': 'No se pueden obtener las coordenadas del camión asignado.'}, status=400)
 
-
         # Crear un registro en HistorialViaje
         historial = HistorialViaje.objects.create(
-            camion=asignacion.camion,
+            camion=camion,
             chofer=request.user,
             fecha_inicio=now(),
             latitud_inicial=latitud_inicial,
@@ -261,13 +319,14 @@ def iniciar_viaje(request):
         chofer = Chofer.objects.get(usuario=request.user)  # Obtener el modelo Chofer relacionado
         enviar_mensaje_whatsapp(chofer.telefono, chofer.api_key, mensaje)
 
-        # Actualizar asignación
+        # Actualizar asignación para indicar que está en viaje
         asignacion.en_viaje = True
         asignacion.save()
 
         return JsonResponse({'status': 'Viaje iniciado', 'fecha_inicio': historial.fecha_inicio})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)  
+        return JsonResponse({'error': str(e)}, status=400)
+
 
 @login_required
 def finalizar_viaje(request):
@@ -276,10 +335,12 @@ def finalizar_viaje(request):
             chofer=request.user, 
             fecha_fin__isnull=True, 
             en_viaje=True
-        ).order_by('-fecha_inicio').first()
+        ).first()
 
         if not asignacion:
             return JsonResponse({'error': 'No hay un viaje activo para finalizar'}, status=400)
+        
+        asignacion.finalizar()
 
         camion = asignacion.camion
 

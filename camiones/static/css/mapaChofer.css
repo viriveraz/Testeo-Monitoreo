@@ -1,0 +1,150 @@
+#cronometro {
+    /* Eliminar display: none para que se vea el cronómetro */
+    /* display: none; */
+    font-size: 14px;
+    margin: 0; 
+    text-align: center;
+    background-color: #ffffff;
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-weight: bold;
+    /* Asegura que el contenedor del cronómetro se comporte similar a un botón */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#cronometro p {
+    margin: 0;
+    padding: 0; 
+}
+
+.menu-inferior button {
+    margin: 5px 0;
+}
+
+/* Se mantiene texto centrado en div */
+.menu-inferior div {
+    text-align: center;
+}
+
+/* Estilos para el modal de selección de camión */
+.modal-reporte {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-reporte[style*="display: block"] {
+    opacity: 1;
+}
+
+.modal-reporte-contenido {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 800px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-family: 'Roboto', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    position: relative;
+}
+
+.cerrar-reporte {
+    color: #ff0000;
+    position: absolute;
+    top: -8px;
+    right: 2px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.cerrar-reporte:hover {
+    color: #ff4d4d;
+}
+
+.modal-titulo {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.modal-reporte-contenido select {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.modal-boton-enviar {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 30px auto 0 auto;
+    width: 50%;
+}
+
+.modal-boton-enviar:hover {
+    background-color: #218838;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+    .modal-reporte-contenido {
+        width: 90%;
+        padding: 15px;
+        font-size: 13px;
+    }
+
+    .modal-titulo {
+        font-size: 14px;
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .modal-boton-enviar {
+        width: 70%;
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+
+    /* Ocultar la imagen de geolocalización en pantallas pequeñas */
+    .menu-inferior > div:first-child img,
+    .menu-inferior > div:first-child span {
+        display: none;
+    }
+}

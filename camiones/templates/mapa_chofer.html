@@ -7,23 +7,9 @@
     <title>Monitoreo de Ubicación en Tiempo Real</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'css/monitoreo2.css' %}">
-    <style>
-        #cronometro {
-            display: none;
-            font-size: 1.5rem;
-            margin: 10px 0;
-            text-align: center;
-        }
-        .menu-inferior button {
-            margin: 5px 0;
-        }
-        .menu-inferior div {
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/mapaChofer.css' %}">
 </head>
 <body>
-
 
     <div id="map"></div>
 
@@ -31,9 +17,22 @@
         <img src="https://cdn-icons-png.flaticon.com/512/447/447031.png" alt="Centrar ubicación">
     </button>
 
+    <!-- Modal para seleccionar el camión -->
+    <div id="modal-seleccionar-camion" class="modal-reporte">
+        <div class="modal-reporte-contenido">
+            <span class="cerrar-reporte" id="cerrar-modal">&times;</span>
+            <div class="modal-titulo">Seleccionar Camión</div>
+            <div>
+                <label for="camion-select">Elige un camión:</label>
+                <select id="camion-select">
+                    <option value="">Selecciona un camión</option>
+                </select>
+            </div>
+            <button id="confirmar-camion" class="modal-boton-enviar">Confirmar</button>
+        </div>
+    </div>
+
     <!-- Cronómetro -->
-
-
     <div class="menu-inferior">
         <div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Geolocalización">
@@ -68,11 +67,42 @@
         document.addEventListener('DOMContentLoaded', function () {
             let intervalo;
             let tiempoInicio;
+            let camionSeleccionado;
 
             const cronometro = document.getElementById("cronometro");
             const tiempo = document.getElementById("tiempo");
             const iniciarViajeBtn = document.getElementById("iniciar-viaje-btn");
             const finalizarForm = document.getElementById("finalizar-form");
+            const modal = document.getElementById("modal-seleccionar-camion");
+            const cerrarModal = document.getElementById("cerrar-modal");
+            const camionSelect = document.getElementById("camion-select");
+            const confirmarCamion = document.getElementById("confirmar-camion");
+
+            // Función para abrir el modal
+            function abrirModal() {
+                modal.style.display = "block";
+
+                // Cargar camiones disponibles
+                fetch("{% url 'obtener_camiones_disponibles' %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        camionSelect.innerHTML = '<option value="">Selecciona un camión</option>';
+                        data.camiones.forEach(camion => {
+                            const option = document.createElement("option");
+                            option.value = camion.id;
+                            option.textContent = `${camion.nombre} - ${camion.patente}`;
+                            camionSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error("Error al cargar camiones:", error));
+            }
+
+            // Función para cerrar el modal
+            function cerrarModalFn() {
+                modal.style.display = "none";
+            }
+
+            cerrarModal.addEventListener("click", cerrarModalFn);
 
             // Función para iniciar el cronómetro
             function iniciarCronometro() {
@@ -100,11 +130,24 @@
 
             // Manejo del botón "Iniciar Viaje"
             iniciarViajeBtn.addEventListener('click', function () {
+                abrirModal();
+            });
+
+            // Confirmar selección del camión
+            confirmarCamion.addEventListener("click", function () {
+                const camionId = camionSelect.value;
+                if (!camionId) {
+                    alert("Por favor, selecciona un camión.");
+                    return;
+                }
+
                 fetch("{% url 'iniciar_viaje' %}", {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
                     },
+                    body: JSON.stringify({ camion_id: camionId })
                 })
                     .then(response => response.json())
                     .then(data => {
@@ -113,6 +156,7 @@
                         } else {
                             alert(data.status);
                             iniciarCronometro();
+                            cerrarModalFn();
                         }
                     })
                     .catch(error => console.error('Error:', error));

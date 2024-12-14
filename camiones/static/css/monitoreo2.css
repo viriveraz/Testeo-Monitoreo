@@ -6,18 +6,19 @@ body, html {
     font-family: 'Roboto', sans-serif;
     background-color: #f4f4f4;
 }
+
 a {
-    text-decoration: none; /* Elimina el subrayado */
-    color: inherit; /* Hereda el color del elemento padre */
+    text-decoration: none;
+    color: inherit;
 }
 
 #map {
-    height: calc(100vh - 60px); /* Altura completa menos la barra inferior */
-    width: 100%; /* Ancho completo */
+    height: calc(100vh - 60px);
+    width: 100%;
     transition: width 0.3s;
     border-radius: 10px;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-    margin: 0; /* Eliminar márgenes */
+    margin: 0;
 }
 
 .menu-inferior {
@@ -25,9 +26,9 @@ a {
     bottom: 0;
     width: 100%;
     height: 70px;
-    background-color: #4CAF50; /* Color verde */
+    background-color: #4CAF50;
     display: flex;
-    justify-content: space-around; /* Espaciado uniforme entre elementos */
+    justify-content: space-around;
     align-items: center;
     color: white;
     box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.2);
@@ -39,37 +40,50 @@ a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 14px; /* Tamaño del texto */
+    font-size: 14px;
 }
 
 .menu-inferior div img {
-    width: 28px; /* Tamaño del icono */
+    width: 28px;
     height: 28px;
-    margin-bottom: 5px; /* Espaciado entre el icono y el texto */
+    margin-bottom: 5px;
 }
 
+/* Se establece un ancho mínimo para que todos los botones luzcan más uniformes */
 .menu-inferior button {
-    background-color: #ffffff; /* Fondo blanco */
-    color: #4CAF50; /* Texto verde */
-    border: 2px solid #4CAF50; /* Borde verde */
-    border-radius: 5px; /* Bordes redondeados */
-    padding: 8px 12px; /* Espaciado interno */
+    background-color: #ffffff;
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    padding: 8px 12px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease; /* Transición suave para hover */
+    transition: all 0.3s ease;
+    min-width: 100px; /* Ajustar según se necesite para uniformar el tamaño */
+    text-align: center;
 }
 
 .menu-inferior button:hover {
-    background-color: #4CAF50; /* Fondo verde al pasar el mouse */
-    color: white; /* Texto blanco */
+    background-color: #4CAF50;
+    color: white;
 }
 
 .menu-inferior button:active {
-    transform: scale(0.95); /* Efecto de presionado */
+    transform: scale(0.95);
 }
 
+/* Aseguramos que el enlace dentro del botón "Historial" ocupe todo el espacio y se vea igual */
+.menu-inferior button a {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    line-height: normal;
+    text-align: center;
+    color: inherit;
+}
 
+/* Botón centrar */
 #btn-centrar {
     position: fixed;
     bottom: 80px;
@@ -100,7 +114,6 @@ a {
     padding: 60px 20px 20px 20px;
     box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-
 }
 
 .menu-lateral.open {
@@ -117,7 +130,7 @@ a {
 }
 
 .menu-lateral ul {
-    list-style: none; /* Elimina los puntos */
+    list-style: none;
     padding: 0;
     margin: 20px 0;
 }
@@ -127,7 +140,7 @@ a {
 }
 
 .menu-lateral ul li a {
-    color: #ddd; /* Texto gris claro */
+    color: #ddd;
     text-decoration: none;
     font-size: 18px;
     display: block;
@@ -137,8 +150,8 @@ a {
 }
 
 .menu-lateral ul li a:hover {
-    background-color: #4CAF50; /* Fondo verde al pasar el mouse */
-    color: white; /* Texto blanco */
+    background-color: #4CAF50;
+    color: white;
 }
 
 #menu-toggle {
@@ -161,12 +174,12 @@ a {
 }
 
 #menu-toggle:hover {
-    background-color: #45a049; /* Verde más oscuro al pasar el mouse */
+    background-color: #45a049;
 }
 
 @media (max-width: 768px) {
     .menu-lateral {
-        width: 70%; /* Ocupa toda la pantalla en dispositivos móviles */
+        width: 70%;
     }
 
     .menu-lateral h2 {
@@ -181,96 +194,93 @@ a {
 .menu-lateral .usuario-info {
     color: white;
     text-align: center;
-    margin: 15px 0; /* Espaciado superior e inferior */
-    padding: 10px; /* Espaciado interno */
-    border: 1px solid #666; /* Borde gris más tenue */
-    border-radius: 5px; /* Bordes redondeados */
-    background-color: #2a2a2a; /* Fondo oscuro */
-    width: calc(100% - 40px); /* Ancho consistente */
-    margin-left: auto; /* Centrar horizontalmente */
+    margin: 15px 0;
+    padding: 10px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    background-color: #2a2a2a;
+    width: calc(100% - 40px);
+    margin-left: auto;
     margin-right: auto;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Sombra ligera */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .menu-lateral .usuario-info p {
     margin: 0;
-    font-size: 13px; /* Tamaño más pequeño para el texto descriptivo */
-    color: #bbb; /* Gris claro */
+    font-size: 13px;
+    color: #bbb;
 }
 
 .menu-lateral .usuario-info strong {
-    font-size: 14px; /* Tamaño uniforme con los demás textos */
-    color: #4CAF50; /* Verde destacado */
+    font-size: 14px;
+    color: #4CAF50;
     font-weight: bold;
 }
 
 /* Botón de cerrar sesión */
 .menu-lateral .logout .btn-logout {
-    background-color: #E53935; /* Rojo */
+    background-color: #E53935;
     color: white;
     border: none;
-    border-radius: 5px; /* Mismo radio que el apartado de usuario */
-    padding: 10px; /* Espaciado interno igual al apartado de usuario */
-    font-size: 14px; /* Tamaño consistente */
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    width: calc(100% - 40px); /* Ancho igual al apartado de usuario */
+    width: calc(100% - 40px);
     margin-left: auto;
     margin-right: auto;
-    margin-top: 15px; /* Espaciado entre bloques */
+    margin-top: 15px;
     display: block;
     text-align: center;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Sombra igual que el apartado */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .menu-lateral .logout .btn-logout:hover {
-    background-color: #C62828; /* Rojo oscuro */
-    transform: scale(1.03); /* Efecto de hover */
-    box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.3); /* Más sombra al pasar el mouse */
+    background-color: #C62828;
+    transform: scale(1.03);
+    box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.3);
 }
 
 .menu-lateral .logout .btn-logout:active {
-    transform: scale(0.97); /* Efecto al presionar */
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); /* Sombra más tenue */
+    transform: scale(0.97);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Fondo oscuro detrás del modal */
 .modal {
-    display: none; /* Oculto por defecto */
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Fondo semitransparente */
+    background-color: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
 }
 
-/* Estilo del contenedor del contenido del modal */
 .modal-contenido {
     background-color: white;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Sombra para resaltar */
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     text-align: center;
-    width: 80%; /* Ancho del modal */
-    max-width: 400px; /* Ancho máximo */
-    animation: fadeIn 0.3s ease-in-out; /* Animación de entrada */
+    width: 80%;
+    max-width: 400px;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Títulos o mensajes */
 .modal-contenido p {
     font-size: 18px;
     font-weight: bold;
-    color: #333; /* Color del texto */
-    margin-bottom: 20px; /* Separación del botón */
+    color: #333;
+    margin-bottom: 20px;
 }
 
-/* Botón de cerrar */
 .modal-contenido .btn-modal {
-    background-color: #4CAF50; /* Verde */
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -278,19 +288,18 @@ a {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease; /* Transición suave */
+    transition: all 0.3s ease;
 }
 
 .modal-contenido .btn-modal:hover {
-    background-color: #45a049; /* Verde más oscuro */
-    transform: scale(1.05); /* Efecto al pasar el ratón */
+    background-color: #45a049;
+    transform: scale(1.05);
 }
 
 .modal-contenido .btn-modal:active {
-    transform: scale(0.95); /* Efecto al hacer clic */
+    transform: scale(0.95);
 }
 
-/* Animación para el modal */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -301,4 +310,3 @@ a {
         transform: translateY(0);
     }
 }
-

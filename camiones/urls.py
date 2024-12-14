@@ -36,4 +36,7 @@ urlpatterns = [
 
     path('enviar-mensaje/', views.enviar_mensaje_predefinido, name='enviar_mensaje_predefinido'),
 
+    path('obtener-camiones-disponibles/', views.obtener_camiones_disponibles, name='obtener_camiones_disponibles'),
+    path('asignar-camion/', views.asignar_camion, name='asignar_camion'),
+
 ]

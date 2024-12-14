@@ -9,6 +9,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Camiones</title>
+    <!-- Modal para mostrar mensajes -->
+    <div id="modal-mensajes" class="modal" style="display:none;">
+        <div class="modal-contenido">
+        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+        <h2 id="titulo-mensaje"></h2>
+        <p id="contenido-mensaje"></p>
+        <button onclick="cerrarModal()" class="btn-success">Cerrar</button>
+        </div>
+    </div>  
     <style>
         /* Contenedor principal */
         .card-container {
@@ -110,7 +119,78 @@
             justify-content: space-between; /* Espacia el título y el botón */
             align-items: center; /* Alinea verticalmente los elementos */
         }
-        
+        /* Estilos para el contenedor del modal */
+        .modal {
+        position: fixed; 
+        z-index: 9999; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.4); /* Fondo semi-transparente */
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-family: sans-serif;
+        }
+
+        /* Estilos para el contenido del modal */
+        .modal-contenido {
+        background: #ffffff;
+        padding: 40px 50px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .modal-contenido h2 {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #000; 
+        }
+
+        .modal-contenido p {
+        font-size: 16px;
+        color: #555; 
+        margin-bottom: 30px;
+        }
+
+        /* Botón de cierre (la 'X') */
+        .cerrar-modal {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 24px;
+        color: #888;
+        cursor: pointer;
+        text-decoration: none;
+        }
+
+        /* Cambiar color al pasar el mouse */
+        .cerrar-modal:hover {
+        color: #555;
+        }
+
+        /* Botón principal (Cerrar) con estilo "exitoso" */
+        .btn-success {
+        background: #28a745; 
+        color: #fff;
+        border: none;
+        font-size: 16px;
+        padding: 10px 30px;
+        border-radius: 5px;
+        cursor: pointer;
+        }
+
+        /* Efecto hover del botón */
+        .btn-success:hover {
+        background: #218838;
+        }
         
     </style>
 </head>
@@ -165,17 +245,53 @@
         </div>
         {% endfor %}
     </div>
+    <script type="text/template" id="mensajes-template">
+        {% if messages %}
+          {% for message in messages %}
+            {
+              "nivel": "{{ message.tags|escapejs }}",
+              "texto": "{{ message|escapejs }}"
+            },
+          {% endfor %}
+        {% endif %}
+      </script> 
 </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const menu = document.getElementById('menu-lateral');
-            const menuToggle = document.getElementById('menu-toggle');
-            menuToggle.addEventListener('click', function () {
-                menu.classList.toggle('closed');
-                menu.classList.toggle('open');
-            });
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Control del menú lateral
+        const mensajesJson = document.getElementById('mensajes-template').innerHTML.trim();
+        const mensajes = mensajesJson ? JSON.parse('[' + mensajesJson.slice(0, -1) + ']') : [];
+        console.log(mensajes);
+        const menu = document.getElementById('menu-lateral');
+        const menuToggle = document.getElementById('menu-toggle');
+        menuToggle.addEventListener('click', function () {
+            menu.classList.toggle('closed');
+            menu.classList.toggle('open');
         });
-    </script>
+
+        // Mostrar modal de mensajes si existen
+        if (mensajes.length > 0) {
+            mostrarModalMensajes(mensajes[0]); // Solo muestra el primer mensaje
+        }
+    });
+
+    function mostrarModalMensajes(mensaje) {
+        const modal = document.getElementById('modal-mensajes');
+        const titulo = document.getElementById('titulo-mensaje');
+        const contenido = document.getElementById('contenido-mensaje');
+
+        titulo.textContent = mensaje.nivel === 'success' ? '¡Éxito!' : 'Error';
+        contenido.textContent = mensaje.texto;
+
+        modal.style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        const modal = document.getElementById('modal-mensajes');
+        modal.style.display = 'none';
+    }
+</script>
+
 </body>
 </html>

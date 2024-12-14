@@ -11,8 +11,6 @@ class Chofer(models.Model):
     telefono = models.CharField(max_length=15, null=True, blank=True)  # Número de teléfono en formato internacional
     api_key = models.CharField(max_length=20, null=True, blank=True)  # API Key de CallMeBot
 
-
-
     def __str__(self):
         return f"{self.usuario.username} - {self.rut}"
 
@@ -26,8 +24,11 @@ class Camion(models.Model):
     latitud = models.FloatField(null=True)
     longitud = models.FloatField(null=True)
     ultima_actualizacion = models.DateTimeField(auto_now=True)
-    choferes_asignados = models.ManyToManyField(User, through='AsignacionChofer')
-
+    estado = models.CharField(
+        max_length=20,
+        choices=[('Disponible', 'Disponible'), ('Asignado', 'Asignado')],
+        default='Disponible'
+    )
     def __str__(self):
         return self.nombre
 
@@ -40,10 +41,27 @@ class AsignacionChofer(models.Model):
     fecha_inicio = models.DateTimeField(null=True, blank=True)
     fecha_fin = models.DateTimeField(null=True, blank=True)
     en_viaje = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Nueva asignación
+            if self.camion.estado != 'Disponible':
+                raise ValidationError("El camión no está disponible para asignación.")
+            self.camion.estado = 'Asignado'
+        super().save(*args, **kwargs)
+        
+        if not self.pk:
+            self.camion.save()
+
+    def finalizar(self):
+        self.fecha_fin = timezone.now()
+        self.camion.estado = 'Disponible'
+        self.camion.save()
+        self.save()
 
     def __str__(self):
         return f'{self.chofer.username} asignado a {self.camion.patente}'
-    
+
+
 class HistorialViaje(models.Model):
     camion = models.ForeignKey(Camion, on_delete=models.CASCADE, related_name="viajes")
     chofer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="viajes")
