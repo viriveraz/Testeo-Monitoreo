@@ -17,7 +17,7 @@
             <li><a href="{% url 'usuarios_list' %}">Usuarios</a></li>
             <li><a href="{% url 'camiones_list' %}">Camiones</a></li>
             <li><a href="{% url 'historial_viajes' %}">Historial De Viajes</a></li>
-            <li><a href="{% url 'estadistica' %}">Estadistica</a></li>
+            <li><a href="{% url 'estadistica' %}">Estadística</a></li>
         </ul>
         <hr>
         <div class="usuario-info">
@@ -34,10 +34,6 @@
 
     <div id="map"></div>
 
-    <button id="btn-centrar">
-        <img src="https://cdn-icons-png.flaticon.com/512/447/447031.png" alt="Centrar ubicación">
-    </button>
-
     <div class="menu-inferior">
         <div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Geolocalización">
@@ -52,7 +48,6 @@
                 <span class="cerrar-reporte" onclick="cerrarModal()">&times;</span>
                 <h3>Enviar Mensaje Predefinido</h3>
 
-                <!-- Sección de mensaje -->
                 <div class="modal-seccion">
                     <button class="modal-titulo">Mensaje</button>
                     <div class="modal-seccion-contenido">
@@ -73,15 +68,12 @@
 
                 <br>
 
-                <!-- Sección de selección de chofer -->
                 <div class="modal-seccion">
                     <button class="modal-titulo">Selección De Choferes</button>
                     <div class="modal-seccion-contenido">
-                        <!-- Botón de "Seleccionar Todos" -->
                         <div style="margin-bottom: 10px; text-align: center;">
                             <button id="boton-seleccionar-todos" class="btn-seleccionar-todos" onclick="toggleSeleccionarTodos()">Seleccionar Todos</button>
                         </div>
-                        
                         <div id="choferes-form">
                             {% for chofer in choferes %}
                             <div class="chofer-checkbox">
@@ -103,33 +95,55 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="{% static 'js/geolocalizacion.js' %}"></script>
 
     <script>
-        
-        // Centrar el mapa en la ubicación actual
-        document.getElementById('btn-centrar').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    map.setView([lat, lon], 13);
-                });
-            }
+        // Inicialización del mapa
+        var map = L.map('map', {
+            center: [-33.4489, -70.6693], // Coordenadas iniciales
+            zoom: 13,
+            zoomControl: false
         });
-        
-        function mostrarCampoTexto() {
-            const mensajeSelect = document.getElementById("mensaje");
-            const campoPersonalizado = document.getElementById("campo-personalizado");
-            campoPersonalizado.style.display = mensajeSelect.value === "personalizado" ? "block" : "none";
 
-            // Mostrar el campo si se selecciona "Mensaje Personalizado"
-            if (mensajeSelect.value === "personalizado") {
-                campoPersonalizado.style.display = "block";
-            } else {
-                campoPersonalizado.style.display = "none";
-            }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = {};
+
+        // Función para actualizar ubicaciones
+        function actualizarUbicaciones() {
+            fetch('/camiones/obtener_ubicaciones/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Datos recibidos:", data); // Verifica los datos en la consola
+                    data.dispositivos.forEach(function(dispositivo) {
+                        var lat = dispositivo.latitud;
+                        var lon = dispositivo.longitud;
+                        var nombreCamion = dispositivo.nombre;
+                        var nombreChofer = dispositivo.chofer; // Nombre del chofer
+
+                        if (markers[nombreCamion]) {
+                            // Si el marcador ya existe, actualiza su posición
+                            markers[nombreCamion].setLatLng([lat, lon]).update();
+                        } else {
+                            // Si no existe, crea un nuevo marcador
+                            markers[nombreCamion] = L.marker([lat, lon]).addTo(map)
+                                .bindPopup(`
+                                    <div>
+                                        <strong>Camión:</strong> ${nombreCamion}<br>
+                                        <strong>Chofer:</strong> ${nombreChofer}
+                                    </div>
+                                `);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error al obtener ubicaciones:', error));
         }
+
+
+
+        // Actualización periódica de las ubicaciones
+        setInterval(actualizarUbicaciones, 5000);
 
         // Funciones para abrir y cerrar el modal
         function abrirModal() {
@@ -196,7 +210,18 @@
             }
         });
 
+        function mostrarCampoTexto() {
+            const mensajeSelect = document.getElementById("mensaje");
+            const campoPersonalizado = document.getElementById("campo-personalizado");
+            campoPersonalizado.style.display = mensajeSelect.value === "personalizado" ? "block" : "none";
 
+            // Mostrar el campo si se selecciona "Mensaje Personalizado"
+            if (mensajeSelect.value === "personalizado") {
+                campoPersonalizado.style.display = "block";
+            } else {
+                campoPersonalizado.style.display = "none";
+            }
+        }
         // Enviar mensajes
         function enviarMensajes() {
             const mensajeSeleccionado = document.getElementById("mensaje").value;
@@ -268,7 +293,6 @@
             const checkboxes = document.querySelectorAll("#choferes-form input[name='chofer']");
             checkboxes.forEach(checkbox => checkbox.checked = false);
         }
-
     </script>
 </body>
 </html>

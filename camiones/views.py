@@ -120,11 +120,27 @@ def dispositivos_chofer_view(request):
 
 @login_required
 def obtener_ubicaciones(request):
+    # Filtrar camiones con asignaciones activas y última actualización reciente
     dispositivos_conectados = Camion.objects.filter(
-        ultima_actualizacion__gte=timezone.now() - timezone.timedelta(seconds=5)
-    )
-    data = [{'latitud': dispositivo.latitud, 'longitud': dispositivo.longitud} for dispositivo in dispositivos_conectados]
+        ultima_actualizacion__gte=timezone.now() - timezone.timedelta(minutes=5)
+    ).prefetch_related('asignacionchofer_set')
+
+    data = []
+    for dispositivo in dispositivos_conectados:
+        # Obtener el chofer asignado
+        asignacion = dispositivo.asignacionchofer_set.filter(fecha_fin__isnull=True).first()
+        chofer_nombre = f"{asignacion.chofer.first_name} {asignacion.chofer.last_name}" if asignacion else "Sin chofer"
+
+        # Agregar datos del camión y el chofer
+        data.append({
+            'nombre': dispositivo.nombre,
+            'chofer': chofer_nombre,
+            'latitud': dispositivo.latitud,
+            'longitud': dispositivo.longitud
+        })
+
     return JsonResponse({'dispositivos': data})
+
 
 # Vistas para usuarios
 def usuarios_list(request):
